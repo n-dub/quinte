@@ -49,14 +49,17 @@ namespace quinte
         {
             glfwPollEvents();
 
-            BackendBeginFrame();
+            if (!BackendBeginFrame())
+                break;
+
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
             DrawUI();
 
             ImGui::Render();
-            BackendEndFrame();
+            if (!BackendEndFrame())
+                break;
         }
 
         return m_ResultCode;

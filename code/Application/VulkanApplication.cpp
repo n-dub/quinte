@@ -23,14 +23,17 @@ namespace quinte
 #endif
 
 
+#define QUINTE_CHECK_VK(err)                                                                                                     \
+    if (err != VK_SUCCESS)                                                                                                       \
+    {                                                                                                                            \
+        FatalError(FixFmt{ "Vulkan error: VkResult was {}", (int32_t)err });                                                     \
+        return false;                                                                                                            \
+    }
+
+
     static void CheckVulkanResult(VkResult err)
     {
-        if (err == 0)
-            return;
-
-        fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
-        if (err < 0)
-            abort();
+        QUINTE_Assert(err == VK_SUCCESS);
     }
 
 
@@ -46,39 +49,38 @@ namespace quinte
     }
 
 
-    void VulkanApplication::FrameRender(ImDrawData* draw_data)
+    bool VulkanApplication::FrameRender(ImDrawData* draw_data)
     {
         ImGui_ImplVulkanH_Window* wd = &m_MainWindowData;
 
         VkResult err;
 
-        VkSemaphore image_acquired_semaphore = wd->FrameSemaphores[wd->SemaphoreIndex].ImageAcquiredSemaphore;
-        VkSemaphore render_complete_semaphore = wd->FrameSemaphores[wd->SemaphoreIndex].RenderCompleteSemaphore;
-        err =
-            vkAcquireNextImageKHR(m_Device, wd->Swapchain, UINT64_MAX, image_acquired_semaphore, VK_NULL_HANDLE, &wd->FrameIndex);
+        VkSemaphore imageAcquiredSemaphore = wd->FrameSemaphores[wd->SemaphoreIndex].ImageAcquiredSemaphore;
+        VkSemaphore renderCompleteSemaphore = wd->FrameSemaphores[wd->SemaphoreIndex].RenderCompleteSemaphore;
+        err = vkAcquireNextImageKHR(m_Device, wd->Swapchain, UINT64_MAX, imageAcquiredSemaphore, VK_NULL_HANDLE, &wd->FrameIndex);
         if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR)
         {
             m_SwapChainRebuild = true;
-            return;
+            return true;
         }
-        CheckVulkanResult(err);
+        QUINTE_CHECK_VK(err);
 
         ImGui_ImplVulkanH_Frame* fd = &wd->Frames[wd->FrameIndex];
         {
             err = vkWaitForFences(m_Device, 1, &fd->Fence, VK_TRUE, UINT64_MAX);
-            CheckVulkanResult(err);
+            QUINTE_CHECK_VK(err);
 
             err = vkResetFences(m_Device, 1, &fd->Fence);
-            CheckVulkanResult(err);
+            QUINTE_CHECK_VK(err);
         }
         {
             err = vkResetCommandPool(m_Device, fd->CommandPool, 0);
-            CheckVulkanResult(err);
+            QUINTE_CHECK_VK(err);
             VkCommandBufferBeginInfo info = {};
             info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
             info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
             err = vkBeginCommandBuffer(fd->CommandBuffer, &info);
-            CheckVulkanResult(err);
+            QUINTE_CHECK_VK(err);
         }
         {
             VkRenderPassBeginInfo info = {};
@@ -100,33 +102,35 @@ namespace quinte
             VkSubmitInfo info = {};
             info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
             info.waitSemaphoreCount = 1;
-            info.pWaitSemaphores = &image_acquired_semaphore;
+            info.pWaitSemaphores = &imageAcquiredSemaphore;
             info.pWaitDstStageMask = &wait_stage;
             info.commandBufferCount = 1;
             info.pCommandBuffers = &fd->CommandBuffer;
             info.signalSemaphoreCount = 1;
-            info.pSignalSemaphores = &render_complete_semaphore;
+            info.pSignalSemaphores = &renderCompleteSemaphore;
 
             err = vkEndCommandBuffer(fd->CommandBuffer);
-            CheckVulkanResult(err);
+            QUINTE_CHECK_VK(err);
             err = vkQueueSubmit(m_Queue, 1, &info, fd->Fence);
-            CheckVulkanResult(err);
+            QUINTE_CHECK_VK(err);
         }
+
+        return true;
     }
 
 
-    void VulkanApplication::FramePresent()
+    bool VulkanApplication::FramePresent()
     {
         if (m_SwapChainRebuild)
-            return;
+            return true;
 
         ImGui_ImplVulkanH_Window* wd = &m_MainWindowData;
 
-        VkSemaphore render_complete_semaphore = wd->FrameSemaphores[wd->SemaphoreIndex].RenderCompleteSemaphore;
+        VkSemaphore renderCompleteSemaphore = wd->FrameSemaphores[wd->SemaphoreIndex].RenderCompleteSemaphore;
         VkPresentInfoKHR info = {};
         info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
         info.waitSemaphoreCount = 1;
-        info.pWaitSemaphores = &render_complete_semaphore;
+        info.pWaitSemaphores = &renderCompleteSemaphore;
         info.swapchainCount = 1;
         info.pSwapchains = &wd->Swapchain;
         info.pImageIndices = &wd->FrameIndex;
@@ -135,15 +139,16 @@ namespace quinte
         if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR)
         {
             m_SwapChainRebuild = true;
-            return;
+            return true;
         }
 
-        CheckVulkanResult(err);
+        QUINTE_CHECK_VK(err);
         wd->SemaphoreIndex = (wd->SemaphoreIndex + 1) % wd->SemaphoreCount;
+        return true;
     }
 
 
-    void VulkanApplication::SetupVulkanWindow(VkSurfaceKHR surface, int width, int height)
+    bool VulkanApplication::SetupVulkanWindow(VkSurfaceKHR surface, int width, int height)
     {
         ImGui_ImplVulkanH_Window* wd = &m_MainWindowData;
         wd->Surface = surface;
@@ -153,7 +158,7 @@ namespace quinte
         if (res != VK_TRUE)
         {
             FatalError("vkGetPhysicalDeviceSurfaceSupportKHR return value was not VK_TRUE");
-            return;
+            return false;
         }
 
         const VkFormat requestSurfaceImageFormat[] = {
@@ -180,6 +185,8 @@ namespace quinte
         IM_ASSERT(m_MinImageCount >= 2);
         ImGui_ImplVulkanH_CreateOrResizeWindow(
             m_Instance, m_PhysicalDevice, m_Device, wd, m_QueueFamily, m_Allocator, width, height, m_MinImageCount);
+
+        return true;
     }
 
 
@@ -229,7 +236,7 @@ namespace quinte
             vkEnumerateInstanceExtensionProperties(nullptr, &properties_count, nullptr);
             properties.resize(properties_count);
             err = vkEnumerateInstanceExtensionProperties(nullptr, &properties_count, properties.Data);
-            CheckVulkanResult(err);
+            QUINTE_CHECK_VK(err);
 
             if (IsExtensionAvailable(properties, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
                 instance_extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
@@ -252,7 +259,7 @@ namespace quinte
             create_info.enabledExtensionCount = (uint32_t)instance_extensions.Size;
             create_info.ppEnabledExtensionNames = instance_extensions.Data;
             err = vkCreateInstance(&create_info, m_Allocator, &m_Instance);
-            CheckVulkanResult(err);
+            QUINTE_CHECK_VK(err);
 
 #ifdef QUINTE_USE_VULKAN_DEBUG_REPORT
             auto vkCreateDebugReportCallbackEXT =
@@ -265,7 +272,7 @@ namespace quinte
             debug_report_ci.pfnCallback = VulkanDebugReportCallback;
             debug_report_ci.pUserData = nullptr;
             err = vkCreateDebugReportCallbackEXT(m_Instance, &debug_report_ci, m_Allocator, &m_DebugReport);
-            CheckVulkanResult(err);
+            QUINTE_CHECK_VK(err);
 #endif
         }
 
@@ -316,7 +323,7 @@ namespace quinte
             create_info.enabledExtensionCount = (uint32_t)device_extensions.Size;
             create_info.ppEnabledExtensionNames = device_extensions.Data;
             err = vkCreateDevice(m_PhysicalDevice, &create_info, m_Allocator, &m_Device);
-            CheckVulkanResult(err);
+            QUINTE_CHECK_VK(err);
             vkGetDeviceQueue(m_Device, m_QueueFamily, 0, &m_Queue);
         }
 
@@ -331,17 +338,18 @@ namespace quinte
             pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
             pool_info.pPoolSizes = pool_sizes;
             err = vkCreateDescriptorPool(m_Device, &pool_info, m_Allocator, &m_DescriptorPool);
-            CheckVulkanResult(err);
+            QUINTE_CHECK_VK(err);
         }
 
         {
             VkSurfaceKHR surface;
             err = glfwCreateWindowSurface(m_Instance, m_pWindow, m_Allocator, &surface);
-            CheckVulkanResult(err);
+            QUINTE_CHECK_VK(err);
 
             int w, h;
             glfwGetFramebufferSize(m_pWindow, &w, &h);
-            SetupVulkanWindow(surface, w, h);
+            if (!SetupVulkanWindow(surface, w, h))
+                return false;
 
             ImGui_ImplGlfw_InitForVulkan(m_pWindow, true);
             ImGui_ImplVulkan_InitInfo init_info = {};
@@ -358,7 +366,7 @@ namespace quinte
             init_info.ImageCount = m_MainWindowData.ImageCount;
             init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
             init_info.Allocator = m_Allocator;
-            init_info.CheckVkResultFn = CheckVulkanResult;
+            init_info.CheckVkResultFn = &CheckVulkanResult;
             ImGui_ImplVulkan_Init(&init_info);
         }
 
@@ -366,7 +374,7 @@ namespace quinte
     }
 
 
-    void VulkanApplication::BackendBeginFrame()
+    bool VulkanApplication::BackendBeginFrame()
     {
         if (m_SwapChainRebuild)
         {
@@ -390,10 +398,11 @@ namespace quinte
         }
 
         ImGui_ImplVulkan_NewFrame();
+        return true;
     }
 
 
-    void VulkanApplication::BackendEndFrame()
+    bool VulkanApplication::BackendEndFrame()
     {
         ImDrawData* draw_data = ImGui::GetDrawData();
         const bool isMinimized = (draw_data->DisplaySize.x <= 0.0f || draw_data->DisplaySize.y <= 0.0f);
@@ -403,9 +412,12 @@ namespace quinte
             m_MainWindowData.ClearValue.color.float32[1] = m_ClearColor.y * m_ClearColor.w;
             m_MainWindowData.ClearValue.color.float32[2] = m_ClearColor.z * m_ClearColor.w;
             m_MainWindowData.ClearValue.color.float32[3] = m_ClearColor.w;
-            FrameRender(draw_data);
-            FramePresent();
+
+            if (!FrameRender(draw_data) || !FramePresent())
+                return false;
         }
+
+        return true;
     }
 
 

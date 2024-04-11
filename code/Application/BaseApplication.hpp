@@ -35,9 +35,10 @@ namespace quinte
 
         virtual bool SetupBackend() = 0;
 
-        virtual void BackendBeginFrame() = 0;
+        virtual bool BackendBeginFrame() = 0;
+        virtual bool BackendEndFrame() = 0;
+
         virtual void DrawUI() = 0;
-        virtual void BackendEndFrame() = 0;
 
     public:
         virtual ~BaseApplication();

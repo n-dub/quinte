@@ -146,7 +146,7 @@ namespace quinte
 
         inline FixedString& Append(const TChar* str, size_t count)
         {
-            QUINTE_Assert(count == 0 || str != nullptr, "Couldn't append more than 0 chars from a null string");
+            QUINTE_AssertMsg(count == 0 || str != nullptr, "Couldn't append more than 0 chars from a null string");
             QUINTE_Assert(count + Size() <= Capacity());
             if (count == 0)
             {

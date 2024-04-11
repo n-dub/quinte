@@ -24,9 +24,9 @@ namespace quinte
         int m_MinImageCount = 2;
         bool m_SwapChainRebuild = false;
 
-        void FrameRender(ImDrawData* draw_data);
-        void FramePresent();
-        void SetupVulkanWindow(VkSurfaceKHR surface, int width, int height);
+        bool FrameRender(ImDrawData* draw_data);
+        bool FramePresent();
+        bool SetupVulkanWindow(VkSurfaceKHR surface, int width, int height);
         VkPhysicalDevice SelectAdapter();
 
     protected:
@@ -36,8 +36,8 @@ namespace quinte
         }
 
         bool SetupBackend() override;
-        void BackendBeginFrame() override;
-        void BackendEndFrame() override;
+        bool BackendBeginFrame() override;
+        bool BackendEndFrame() override;
 
     public:
         ~VulkanApplication() override;
