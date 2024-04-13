@@ -4,36 +4,36 @@
 
 namespace quinte
 {
-#ifdef QUINTE_USE_VULKAN_DEBUG_REPORT
+#ifdef QU_USE_VULKAN_DEBUG_REPORT
     static VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugReportCallback(VkDebugReportFlagsEXT flags,
                                                                     VkDebugReportObjectTypeEXT objectType, uint64_t object,
                                                                     size_t location, int32_t messageCode,
                                                                     const char* pLayerPrefix, const char* pMessage,
                                                                     void* pUserData)
     {
-        QUINTE_Unused(flags);
-        QUINTE_Unused(object);
-        QUINTE_Unused(location);
-        QUINTE_Unused(messageCode);
-        QUINTE_Unused(pUserData);
-        QUINTE_Unused(pLayerPrefix);
+        QU_Unused(flags);
+        QU_Unused(object);
+        QU_Unused(location);
+        QU_Unused(messageCode);
+        QU_Unused(pUserData);
+        QU_Unused(pLayerPrefix);
         fprintf(stderr, "[vulkan] Debug report from ObjectType: %i\nMessage: %s\n\n", objectType, pMessage);
         return VK_FALSE;
     }
 #endif
 
 
-#define QUINTE_CHECK_VK(err)                                                                                                     \
+#define QU_CHECK_VK(err)                                                                                                         \
     if (err != VK_SUCCESS)                                                                                                       \
     {                                                                                                                            \
-        FatalError(FixFmt{ "Vulkan error: VkResult was {}", (int32_t)err });                                                     \
+        FatalError(FixFmt64{ "Vulkan error: VkResult was {}", (int32_t)err });                                                   \
         return false;                                                                                                            \
     }
 
 
     static void CheckVulkanResult(VkResult err)
     {
-        QUINTE_Assert(err == VK_SUCCESS);
+        QU_Assert(err == VK_SUCCESS);
     }
 
 
@@ -63,24 +63,24 @@ namespace quinte
             m_SwapChainRebuild = true;
             return true;
         }
-        QUINTE_CHECK_VK(err);
+        QU_CHECK_VK(err);
 
         ImGui_ImplVulkanH_Frame* fd = &wd->Frames[wd->FrameIndex];
         {
             err = vkWaitForFences(m_Device, 1, &fd->Fence, VK_TRUE, UINT64_MAX);
-            QUINTE_CHECK_VK(err);
+            QU_CHECK_VK(err);
 
             err = vkResetFences(m_Device, 1, &fd->Fence);
-            QUINTE_CHECK_VK(err);
+            QU_CHECK_VK(err);
         }
         {
             err = vkResetCommandPool(m_Device, fd->CommandPool, 0);
-            QUINTE_CHECK_VK(err);
+            QU_CHECK_VK(err);
             VkCommandBufferBeginInfo info = {};
             info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
             info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
             err = vkBeginCommandBuffer(fd->CommandBuffer, &info);
-            QUINTE_CHECK_VK(err);
+            QU_CHECK_VK(err);
         }
         {
             VkRenderPassBeginInfo info = {};
@@ -110,9 +110,9 @@ namespace quinte
             info.pSignalSemaphores = &renderCompleteSemaphore;
 
             err = vkEndCommandBuffer(fd->CommandBuffer);
-            QUINTE_CHECK_VK(err);
+            QU_CHECK_VK(err);
             err = vkQueueSubmit(m_Queue, 1, &info, fd->Fence);
-            QUINTE_CHECK_VK(err);
+            QU_CHECK_VK(err);
         }
 
         return true;
@@ -142,7 +142,7 @@ namespace quinte
             return true;
         }
 
-        QUINTE_CHECK_VK(err);
+        QU_CHECK_VK(err);
         wd->SemaphoreIndex = (wd->SemaphoreIndex + 1) % wd->SemaphoreCount;
         return true;
     }
@@ -236,7 +236,7 @@ namespace quinte
             vkEnumerateInstanceExtensionProperties(nullptr, &properties_count, nullptr);
             properties.resize(properties_count);
             err = vkEnumerateInstanceExtensionProperties(nullptr, &properties_count, properties.Data);
-            QUINTE_CHECK_VK(err);
+            QU_CHECK_VK(err);
 
             if (IsExtensionAvailable(properties, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
                 instance_extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
@@ -249,7 +249,7 @@ namespace quinte
             }
 #endif
 
-#ifdef QUINTE_USE_VULKAN_DEBUG_REPORT
+#ifdef QU_USE_VULKAN_DEBUG_REPORT
             const char* layers[] = { "VK_LAYER_KHRONOS_validation" };
             create_info.enabledLayerCount = 1;
             create_info.ppEnabledLayerNames = layers;
@@ -259,9 +259,9 @@ namespace quinte
             create_info.enabledExtensionCount = (uint32_t)instance_extensions.Size;
             create_info.ppEnabledExtensionNames = instance_extensions.Data;
             err = vkCreateInstance(&create_info, m_Allocator, &m_Instance);
-            QUINTE_CHECK_VK(err);
+            QU_CHECK_VK(err);
 
-#ifdef QUINTE_USE_VULKAN_DEBUG_REPORT
+#ifdef QU_USE_VULKAN_DEBUG_REPORT
             auto vkCreateDebugReportCallbackEXT =
                 (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(m_Instance, "vkCreateDebugReportCallbackEXT");
             IM_ASSERT(vkCreateDebugReportCallbackEXT != nullptr);
@@ -272,7 +272,7 @@ namespace quinte
             debug_report_ci.pfnCallback = VulkanDebugReportCallback;
             debug_report_ci.pUserData = nullptr;
             err = vkCreateDebugReportCallbackEXT(m_Instance, &debug_report_ci, m_Allocator, &m_DebugReport);
-            QUINTE_CHECK_VK(err);
+            QU_CHECK_VK(err);
 #endif
         }
 
@@ -323,7 +323,7 @@ namespace quinte
             create_info.enabledExtensionCount = (uint32_t)device_extensions.Size;
             create_info.ppEnabledExtensionNames = device_extensions.Data;
             err = vkCreateDevice(m_PhysicalDevice, &create_info, m_Allocator, &m_Device);
-            QUINTE_CHECK_VK(err);
+            QU_CHECK_VK(err);
             vkGetDeviceQueue(m_Device, m_QueueFamily, 0, &m_Queue);
         }
 
@@ -338,13 +338,13 @@ namespace quinte
             pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
             pool_info.pPoolSizes = pool_sizes;
             err = vkCreateDescriptorPool(m_Device, &pool_info, m_Allocator, &m_DescriptorPool);
-            QUINTE_CHECK_VK(err);
+            QU_CHECK_VK(err);
         }
 
         {
             VkSurfaceKHR surface;
             err = glfwCreateWindowSurface(m_Instance, m_pWindow, m_Allocator, &surface);
-            QUINTE_CHECK_VK(err);
+            QU_CHECK_VK(err);
 
             int w, h;
             glfwGetFramebufferSize(m_pWindow, &w, &h);
@@ -413,7 +413,17 @@ namespace quinte
             m_MainWindowData.ClearValue.color.float32[2] = m_ClearColor.z * m_ClearColor.w;
             m_MainWindowData.ClearValue.color.float32[3] = m_ClearColor.w;
 
-            if (!FrameRender(draw_data) || !FramePresent())
+            if (!FrameRender(draw_data))
+                return false;
+
+            ImGuiIO& io = ImGui::GetIO();
+            if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+            {
+                ImGui::UpdatePlatformWindows();
+                ImGui::RenderPlatformWindowsDefault();
+            }
+
+            if (!FramePresent())
                 return false;
         }
 
@@ -432,7 +442,7 @@ namespace quinte
         ImGui_ImplVulkanH_DestroyWindow(m_Instance, m_Device, &m_MainWindowData, m_Allocator);
         vkDestroyDescriptorPool(m_Device, m_DescriptorPool, m_Allocator);
 
-#ifdef QUINTE_USE_VULKAN_DEBUG_REPORT
+#ifdef QU_USE_VULKAN_DEBUG_REPORT
         auto vkDestroyDebugReportCallbackEXT =
             (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(m_Instance, "vkDestroyDebugReportCallbackEXT");
         vkDestroyDebugReportCallbackEXT(m_Instance, m_DebugReport, m_Allocator);

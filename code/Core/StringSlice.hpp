@@ -85,7 +85,7 @@ namespace quinte
         // O(1)
         [[nodiscard]] inline TChar ByteAt(size_t index) const
         {
-            QUINTE_AssertMsg(index < Size(), "Invalid index");
+            QU_AssertMsg(index < Size(), "Invalid index");
             return Data()[index];
         }
 
@@ -99,7 +99,7 @@ namespace quinte
         {
             const size_t size = Size();
             const TChar* data = Data();
-            QUINTE_Assert(start.m_Iter >= data && start.m_Iter <= data + size);
+            QU_Assert(start.m_Iter >= data && start.m_Iter <= data + size);
 
             const size_t searchSize = data + size - start.m_Iter;
             return Str::FindFirstOf(start.m_Iter, searchSize, search);

@@ -1,7 +1,7 @@
 #include <Application/BaseApplication.hpp>
 #include <UI/Utils.hpp>
 
-#if QUINTE_WINDOWS
+#if QU_WINDOWS
 #    if !defined GLFW_EXPOSE_NATIVE_WIN32
 #        define GLFW_EXPOSE_NATIVE_WIN32
 #    endif
@@ -17,8 +17,8 @@ namespace quinte
 {
     static void GLFWErrorCallback(int error, const char* description)
     {
-        const FixFmt message{ "GLFW Error: code {}\n\t{}", error, description };
-        alert::Display(nullptr, message, FixFmt{ "GLFW Error: {}", error }.Data(), alert::Kind::Error, alert::Buttons::OK);
+        const FixFmt512 message{ "GLFW Error: code {}\n\t{}", error, description };
+        alert::Display(nullptr, message, FixFmt32{ "GLFW Error: {}", error }.Data(), alert::Kind::Error, alert::Buttons::OK);
     }
 
 
@@ -37,14 +37,13 @@ namespace quinte
         if (!SetupBackend())
             return false;
 
-        SetupUI();
         return true;
     }
 
 
     int32_t BaseApplication::Run()
     {
-        QUINTE_Assert(m_pWindow);
+        QU_Assert(m_pWindow);
 
         while (!glfwWindowShouldClose(m_pWindow) && m_ResultCode == 0)
         {
@@ -75,7 +74,7 @@ namespace quinte
 
     void BaseApplication::FatalError(StringSlice message, int32_t errorCode)
     {
-        QUINTE_Assert(errorCode);
+        QU_Assert(errorCode);
         DisplayAlert(message, "Fatal Error", alert::Kind::Error, alert::Buttons::OK);
         Exit(errorCode);
     }
@@ -98,9 +97,7 @@ namespace quinte
 
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
-        ImGuiIO& io = ImGui::GetIO();
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+        SetupUI();
 
         return m_pWindow;
     }
@@ -108,7 +105,12 @@ namespace quinte
 
     void BaseApplication::SetupUI()
     {
-        ImGui::StyleColorsDark();
-        ui::LoadResources();
+        ui::Initialize();
+    }
+
+
+    BaseApplication::BaseApplication(StringSlice name)
+        : m_Name(name)
+    {
     }
 } // namespace quinte

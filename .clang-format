@@ -57,6 +57,7 @@ IndentCaseBlocks: true
 IndentCaseLabels: false
 IndentPPDirectives: AfterHash
 IndentWidth: 4
+IndentRequiresClause: false
 KeepEmptyLinesAtTheStartOfBlocks: false
 MaxEmptyLinesToKeep: 2
 NamespaceIndentation: All
@@ -83,5 +84,5 @@ SpacesInCStyleCastParentheses: false
 SpacesInConditionalStatement: false
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
-Standard: c++11
+Standard: c++20
 UseTab: Never

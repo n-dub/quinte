@@ -81,7 +81,7 @@ namespace quinte::utf8
         int e;
         void* input = reinterpret_cast<void*>(const_cast<TChar*>(it));
         it = static_cast<const TChar*>(detail::utf8_decode(input, &c, &e));
-        QUINTE_AssertMsg(e == 0, "Invalid unicode");
+        QU_AssertMsg(e == 0, "Invalid unicode");
         return c;
     }
 
@@ -98,7 +98,7 @@ namespace quinte::utf8
             detail::utf8_decode(input, &c, &e);
         }
 
-        QUINTE_AssertMsg(e == 0, "Invalid prior unicode");
+        QU_AssertMsg(e == 0, "Invalid prior unicode");
         it = iter;
         return c;
     }
