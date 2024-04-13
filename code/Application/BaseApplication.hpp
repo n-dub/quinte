@@ -10,14 +10,9 @@
 
 namespace quinte
 {
-    class BaseApplication
+    class BaseApplication : public NoCopyMove
     {
         int32_t m_ResultCode = 0;
-
-        BaseApplication(const BaseApplication&) = delete;
-        BaseApplication& operator=(const BaseApplication&) = delete;
-        BaseApplication(BaseApplication&&) = delete;
-        BaseApplication& operator=(BaseApplication&&) = delete;
 
         bool SetupWindow();
         void SetupUI();

@@ -1,4 +1,5 @@
 #include <Application/BaseApplication.hpp>
+#include <UI/Utils.hpp>
 
 #if QUINTE_WINDOWS
 #    if !defined GLFW_EXPOSE_NATIVE_WIN32
@@ -107,7 +108,7 @@ namespace quinte
 
     void BaseApplication::SetupUI()
     {
-        using namespace ImGui;
         ImGui::StyleColorsDark();
+        ui::LoadResources();
     }
 } // namespace quinte

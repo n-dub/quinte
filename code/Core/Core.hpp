@@ -113,4 +113,36 @@ namespace quinte
         seed ^= hasher(value) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         HashCombine(seed, args...);
     }
+
+
+    class NoCopy
+    {
+        NoCopy(const NoCopy&) = delete;
+        NoCopy& operator=(const NoCopy&) = delete;
+
+    public:
+        NoCopy() = default;
+    };
+
+
+    class NoMove
+    {
+        NoMove(NoMove&&) = delete;
+        NoMove& operator=(NoMove&&) = delete;
+
+    public:
+        NoMove() = default;
+    };
+
+
+    class NoCopyMove
+    {
+        NoCopyMove(const NoCopyMove&) = delete;
+        NoCopyMove& operator=(const NoCopyMove&) = delete;
+        NoCopyMove(NoCopyMove&&) = delete;
+        NoCopyMove& operator=(NoCopyMove&&) = delete;
+
+    public:
+        NoCopyMove() = default;
+    };
 } // namespace quinte
