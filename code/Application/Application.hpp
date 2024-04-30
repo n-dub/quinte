@@ -7,7 +7,8 @@ namespace quinte
     class Application final : public VulkanApplication
     {
         AudioEngine m_Engine;
-        uint32_t m_SelectedDeviceIndex = 0;
+        uint32_t m_SelectedInputDeviceIndex = 0;
+        uint32_t m_SelectedOutputDeviceIndex = 0;
 
     public:
         Application();

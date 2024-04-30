@@ -1,11 +1,12 @@
 ﻿#include <Application/Application.hpp>
 #include <UI/Icons.hpp>
 #include <UI/Widgets/Track.hpp>
+#include <numbers>
 
 namespace quinte
 {
-    static audio::CallbackResult AudioCallback(void* pOutputBuffer, void* pInputBuffer, uint32_t frameCount, double streamTime,
-                                               audio::StreamStatus status, void* pUserData)
+    [[maybe_unused]] static audio::CallbackResult AudioCallbackSaw(void* pOutputBuffer, void* pInputBuffer, uint32_t frameCount,
+                                                                   double streamTime, audio::StreamStatus status, void* pUserData)
     {
         QU_Unused(pInputBuffer);
         QU_Unused(streamTime);
@@ -24,6 +25,30 @@ namespace quinte
                 lastValues[channelIndex] += 0.005f * (channelIndex + 1 + (channelIndex * 0.1f));
                 if (lastValues[channelIndex] >= 1.0f)
                     lastValues[channelIndex] -= 2.0f;
+            }
+        }
+
+        return audio::CallbackResult::OK;
+    }
+
+
+    [[maybe_unused]] static audio::CallbackResult AudioCallbackDist(void* pOutputBuffer, void* pInputBuffer, uint32_t frameCount,
+                                                                    double streamTime, audio::StreamStatus status, void*)
+    {
+        QU_Unused(streamTime);
+        QU_Unused(status);
+
+        const uint32_t channelCount = 2;
+        float* outBuffer = static_cast<float*>(pOutputBuffer);
+        const float* inBuffer = static_cast<float*>(pInputBuffer);
+        const float drive = 300.0f;
+
+        for (uint32_t frameIndex = 0; frameIndex < frameCount; frameIndex++)
+        {
+            for (uint32_t channelIndex = 0; channelIndex < channelCount; channelIndex++)
+            {
+                const float sample = *inBuffer++;
+                *outBuffer++ = (2.0f / std::numbers::pi_v<float>)*atan(drive * sample);
             }
         }
 
@@ -71,16 +96,51 @@ namespace quinte
             IAudioAPI* pAPI = m_Engine.GetAPI();
             const auto& devices = pAPI->GetDevices();
 
-            const audio::DeviceDesc* pSelectedDevice =
-                m_SelectedDeviceIndex >= devices.size() ? nullptr : &devices[m_SelectedDeviceIndex];
-            if (BeginCombo("###DeviceCombo", pSelectedDevice ? pSelectedDevice->Name.Data() : "Select Device"))
+            const audio::DeviceDesc* pSelectedInDevice =
+                m_SelectedInputDeviceIndex >= devices.size() ? nullptr : &devices[m_SelectedInputDeviceIndex];
+            if (BeginCombo("Input Device", pSelectedInDevice ? pSelectedInDevice->Name.Data() : "Select Input Device"))
             {
                 for (uint32_t deviceIndex = 0; deviceIndex < devices.size(); ++deviceIndex)
                 {
                     const audio::DeviceDesc& device = devices[deviceIndex];
-                    if (Selectable(device.Name.Data(), m_SelectedDeviceIndex == deviceIndex))
+                    if (device.InputChannelCount == 0)
+                        continue;
+
+                    if (Selectable(device.Name.Data(), m_SelectedInputDeviceIndex == deviceIndex))
                     {
-                        m_SelectedDeviceIndex = deviceIndex;
+                        m_SelectedInputDeviceIndex = deviceIndex;
+                    }
+
+                    if (IsItemHovered(ImGuiHoveredFlags_ForTooltip))
+                    {
+                        BeginTooltip();
+                        Text("ID: %d", device.ID.Value);
+                        Text("Name: %s", device.Name.Data());
+                        Text("OutputChannelCount: %d", device.OutputChannelCount);
+                        Text("InputChannelCount: %d", device.InputChannelCount);
+                        Text("DuplexChannelCount: %d", device.DuplexChannelCount);
+                        Text("CurrentSampleRate: %d", device.CurrentSampleRate);
+                        Text("PreferredSampleRate: %d", device.PreferredSampleRate);
+                        EndTooltip();
+                    }
+                }
+
+                EndCombo();
+            }
+
+            const audio::DeviceDesc* pSelectedOutDevice =
+                m_SelectedInputDeviceIndex >= devices.size() ? nullptr : &devices[m_SelectedOutputDeviceIndex];
+            if (BeginCombo("Output Device", pSelectedOutDevice ? pSelectedOutDevice->Name.Data() : "Select Output Device"))
+            {
+                for (uint32_t deviceIndex = 0; deviceIndex < devices.size(); ++deviceIndex)
+                {
+                    const audio::DeviceDesc& device = devices[deviceIndex];
+                    if (device.OutputChannelCount == 0)
+                        continue;
+
+                    if (Selectable(device.Name.Data(), m_SelectedOutputDeviceIndex == deviceIndex))
+                    {
+                        m_SelectedOutputDeviceIndex = deviceIndex;
                     }
 
                     if (IsItemHovered(ImGuiHoveredFlags_ForTooltip))
@@ -108,14 +168,19 @@ namespace quinte
                 if (pAPI->GetState() != audio::StreamState::Running)
                 {
                     audio::StreamDesc outputDesc{};
-                    outputDesc.DeviceID = devices[m_SelectedDeviceIndex].ID;
+                    outputDesc.DeviceID = devices[m_SelectedOutputDeviceIndex].ID;
                     outputDesc.ChannelCount = 2;
+
+                    audio::StreamDesc inputDesc{};
+                    inputDesc.DeviceID = devices[m_SelectedInputDeviceIndex].ID;
+                    inputDesc.ChannelCount = 2;
 
                     audio::StreamOpenInfo openInfo{};
                     openInfo.pOutputDesc = &outputDesc;
+                    openInfo.pInputDesc = &inputDesc;
                     openInfo.Format = audio::Format::Float32;
                     openInfo.BufferFrameCount = 512;
-                    openInfo.Callback = &AudioCallback;
+                    openInfo.Callback = &AudioCallbackDist;
 
                     static float s_UserData[2];
                     openInfo.pUserData = s_UserData;

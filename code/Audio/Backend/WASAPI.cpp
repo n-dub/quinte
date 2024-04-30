@@ -295,8 +295,19 @@ namespace quinte
         if (audio::Failed(result))
             return result;
 
+        if (m_StreamData.Mode == BackendStreamMode::None)
+        {
+            m_StreamData.Mode = openInfo.Mode;
+        }
+        else
+        {
+            if (m_StreamData.Mode == openInfo.Mode)
+                return audio::ResultCode::FailDeviceModeNotSupported;
+
+            m_StreamData.Mode = BackendStreamMode::Duplex;
+        }
+
         const uint32_t modeIndex = enum_cast(openInfo.Mode);
-        m_StreamData.Mode = openInfo.Mode;
         m_StreamData.DeviceID[modeIndex] = openInfo.DeviceID;
         m_StreamData.SampleRate = openInfo.SampleRate;
         m_StreamData.BufferFrameCount = bufferFrameCount;
@@ -597,17 +608,33 @@ namespace quinte
                                     audio::GetFormatByteSize(m_StreamData.Device.Format[modeIndex]));
         }
 
-        QU_Assert(m_StreamData.Mode == BackendStreamMode::Output || m_StreamData.Mode == BackendStreamMode::Input);
+        const uint32_t inDeviceChannelCount = m_StreamData.Device.ChannelCount[kInput];
+        const uint32_t outDeviceChannelCount = m_StreamData.Device.ChannelCount[kOutput];
+        const uint32_t inFormatBytes = audio::GetFormatByteSize(m_StreamData.Device.Format[kInput]);
+        const uint32_t outFormatBytes = audio::GetFormatByteSize(m_StreamData.Device.Format[kOutput]);
 
-        const uint32_t deviceChannelCount = m_StreamData.Device.ChannelCount[enum_cast(m_StreamData.Mode)];
-        const uint32_t formatBytes = audio::GetFormatByteSize(m_StreamData.Device.Format[enum_cast(m_StreamData.Mode)]);
-        const uint32_t formatSampleRate =
-            m_StreamData.Mode == BackendStreamMode::Input ? captureFormatSampleRate : renderFormatSampleRate;
-
-        const uint32_t deviceBufferSize = m_StreamData.BufferFrameCount * deviceChannelCount * formatBytes;
-
-        uint32_t convBufferSize = CeilDivide(m_StreamData.BufferFrameCount * formatSampleRate, m_StreamData.SampleRate)
-            * deviceChannelCount * formatBytes;
+        uint32_t convBufferSize, deviceBufferSize;
+        if (m_StreamData.Mode == BackendStreamMode::Output)
+        {
+            deviceBufferSize = m_StreamData.BufferFrameCount * outDeviceChannelCount * outFormatBytes;
+            convBufferSize = CeilDivide(m_StreamData.BufferFrameCount * renderFormatSampleRate, m_StreamData.SampleRate)
+                * outDeviceChannelCount * outFormatBytes;
+        }
+        else if (m_StreamData.Mode == BackendStreamMode::Input)
+        {
+            deviceBufferSize = m_StreamData.BufferFrameCount * inDeviceChannelCount * inFormatBytes;
+            convBufferSize = CeilDivide(m_StreamData.BufferFrameCount * captureFormatSampleRate, m_StreamData.SampleRate)
+                * inDeviceChannelCount * inFormatBytes;
+        }
+        else
+        {
+            deviceBufferSize =
+                m_StreamData.BufferFrameCount * Max(outDeviceChannelCount * outFormatBytes, inDeviceChannelCount * inFormatBytes);
+            convBufferSize = Max(CeilDivide(m_StreamData.BufferFrameCount * renderFormatSampleRate, m_StreamData.SampleRate)
+                                     * outDeviceChannelCount * outFormatBytes,
+                                 CeilDivide(m_StreamData.BufferFrameCount * captureFormatSampleRate, m_StreamData.SampleRate)
+                                     * inDeviceChannelCount * inFormatBytes);
+        }
 
         uint8_t* convBuffer = memory::NewArray<uint8_t>(&temp, convBufferSize);
         m_StreamData.DeviceBuffer.reset(memory::DefaultNewArray<uint8_t>(deviceBufferSize));
@@ -616,13 +643,14 @@ namespace quinte
         bool callbackPushed = true;
         bool callbackStopped = false;
         DWORD captureFlags = 0;
-        uint32_t pullSampleCount = CeilDivide(m_StreamData.BufferFrameCount * captureFormatSampleRate, m_StreamData.SampleRate);
         while (m_StreamData.State.load(std::memory_order_acquire) != audio::StreamState::Stopping)
         {
             if (!callbackPulled)
             {
                 if (captureAudioClient)
                 {
+                    uint32_t pullSampleCount =
+                        CeilDivide(m_StreamData.BufferFrameCount * captureFormatSampleRate, m_StreamData.SampleRate);
                     convBufferSize = 0;
 
                     const uint32_t inputChannelCount = m_StreamData.Device.ChannelCount[kInput];
