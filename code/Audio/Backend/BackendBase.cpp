@@ -29,7 +29,7 @@ namespace quinte
         if (m_StreamData.User.Format == m_StreamData.Device.Format[modeIndex]
             && m_StreamData.User.ChannelCount[0] == m_StreamData.Device.ChannelCount[0]
             && m_StreamData.User.ChannelCount[1] == m_StreamData.Device.ChannelCount[1]
-            && (m_StreamData.Device.Interleaved[modeIndex] || m_StreamData.User.ChannelCount[modeIndex] < 2))
+            && (!m_StreamData.Device.Interleaved[modeIndex] || m_StreamData.User.ChannelCount[modeIndex] < 2))
         {
             conversionInfo.IsNeeded = false;
             return;
@@ -47,9 +47,9 @@ namespace quinte
 
         conversionInfo.ChannelCount = std::min(conversionInfo.In.Jump, conversionInfo.Out.Jump);
 
-        if (!m_StreamData.Device.Interleaved[modeIndex])
+        if (m_StreamData.Device.Interleaved[modeIndex])
         {
-            if (mode == BackendStreamMode::Input)
+            if (mode == BackendStreamMode::Output)
             {
                 for (uint32_t channelIndex = 0; channelIndex < conversionInfo.ChannelCount; ++channelIndex)
                 {
@@ -72,8 +72,10 @@ namespace quinte
         {
             for (uint32_t channelIndex = 0; channelIndex < conversionInfo.ChannelCount; ++channelIndex)
             {
-                conversionInfo.In.Offset.push_back(channelIndex);
-                conversionInfo.Out.Offset.push_back(channelIndex);
+                conversionInfo.In.Offset.push_back(channelIndex * m_StreamData.BufferFrameCount);
+                conversionInfo.Out.Offset.push_back(channelIndex * m_StreamData.BufferFrameCount);
+                conversionInfo.In.Jump = 1;
+                conversionInfo.Out.Jump = 1;
             }
         }
 

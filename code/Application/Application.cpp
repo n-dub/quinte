@@ -5,35 +5,8 @@
 
 namespace quinte
 {
-    [[maybe_unused]] static audio::CallbackResult AudioCallbackSaw(void* pOutputBuffer, void* pInputBuffer, uint32_t frameCount,
-                                                                   double streamTime, audio::StreamStatus status, void* pUserData)
-    {
-        QU_Unused(pInputBuffer);
-        QU_Unused(streamTime);
-
-        const uint32_t channelCount = 2;
-        float* buffer = static_cast<float*>(pOutputBuffer);
-        float* lastValues = static_cast<float*>(pUserData);
-
-        QU_Assert(status == audio::StreamStatus::OK);
-
-        for (uint32_t frameIndex = 0; frameIndex < frameCount; frameIndex++)
-        {
-            for (uint32_t channelIndex = 0; channelIndex < channelCount; channelIndex++)
-            {
-                *buffer++ = static_cast<float>(lastValues[channelIndex] * 0.5f);
-                lastValues[channelIndex] += 0.005f * (channelIndex + 1 + (channelIndex * 0.1f));
-                if (lastValues[channelIndex] >= 1.0f)
-                    lastValues[channelIndex] -= 2.0f;
-            }
-        }
-
-        return audio::CallbackResult::OK;
-    }
-
-
-    [[maybe_unused]] static audio::CallbackResult AudioCallbackDist(void* pOutputBuffer, void* pInputBuffer, uint32_t frameCount,
-                                                                    double streamTime, audio::StreamStatus status, void*)
+    static audio::CallbackResult AudioCallbackDist(void* pOutputBuffer, void* pInputBuffer, uint32_t frameCount,
+                                                   double streamTime, audio::StreamStatus status, void*)
     {
         QU_Unused(streamTime);
         QU_Unused(status);
@@ -43,12 +16,19 @@ namespace quinte
         const float* inBuffer = static_cast<float*>(pInputBuffer);
         const float drive = 300.0f;
 
-        for (uint32_t frameIndex = 0; frameIndex < frameCount; frameIndex++)
+        for (uint32_t frameIndex = 0; frameIndex < frameCount; ++frameIndex)
         {
-            for (uint32_t channelIndex = 0; channelIndex < channelCount; channelIndex++)
+            float sample = 0.0f;
+            for (uint32_t channelIndex = 0; channelIndex < channelCount; ++channelIndex)
             {
-                const float sample = *inBuffer++;
-                *outBuffer++ = (2.0f / std::numbers::pi_v<float>)*atan(drive * sample);
+                const float* inChannel = inBuffer + channelIndex * frameCount;
+                sample += inChannel[frameIndex] / channelCount;
+            }
+
+            for (uint32_t channelIndex = 0; channelIndex < channelCount; ++channelIndex)
+            {
+                float* outChannel = outBuffer + channelIndex * frameCount;
+                outChannel[frameIndex] = (2.0f / std::numbers::pi_v<float>)*atan(drive * sample);
             }
         }
 
@@ -181,9 +161,6 @@ namespace quinte
                     openInfo.Format = audio::Format::Float32;
                     openInfo.BufferFrameCount = 512;
                     openInfo.Callback = &AudioCallbackDist;
-
-                    static float s_UserData[2];
-                    openInfo.pUserData = s_UserData;
 
                     const audio::ResultCode openResult = pAPI->OpenStream(openInfo);
                     QU_Assert(openResult == audio::ResultCode::Success);

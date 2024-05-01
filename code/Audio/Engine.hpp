@@ -43,16 +43,17 @@ namespace quinte
             default:
                 return 0;
             case Format::Int8:
-                return 1;
+                return sizeof(FormatType<Format::Int8>);
             case Format::Int16:
-                return 2;
+                return sizeof(FormatType<Format::Int16>);
             case Format::Int24:
-                return 3;
+                return sizeof(FormatType<Format::Int24>);
             case Format::Int32:
+                return sizeof(FormatType<Format::Int32>);
             case Format::Float32:
-                return 4;
+                return sizeof(FormatType<Format::Float32>);
             case Format::Float64:
-                return 8;
+                return sizeof(FormatType<Format::Float64>);
             }
         }
 
