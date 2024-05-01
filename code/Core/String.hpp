@@ -89,7 +89,7 @@ namespace quinte
             if (s < MinCapacity)
                 return MinCapacity - 1;
 
-            size_t guess = quinte::AlignUp<kDefaultAlignment / sizeof(TChar)>(s + 1) - 1;
+            size_t guess = quinte::AlignUp<memory::kDefaultAlignment / sizeof(TChar)>(s + 1) - 1;
 
             if (guess == MinCapacity)
             {
@@ -101,22 +101,22 @@ namespace quinte
 
         inline static TChar* Allocate(size_t s) noexcept
         {
-            return static_cast<TChar*>(Memory::GetDefaultAllocator()->allocate(s, kDefaultAlignment));
+            return static_cast<TChar*>(std::pmr::get_default_resource()->allocate(s, memory::kDefaultAlignment));
         }
 
         inline static void Deallocate(TChar* ptr, size_t size) noexcept
         {
-            Memory::GetDefaultAllocator()->deallocate(ptr, size);
+            std::pmr::get_default_resource()->deallocate(ptr, size);
         }
 
         inline static void CopyData(TChar* dest, const TChar* src, size_t size) noexcept
         {
-            Memory::Copy(dest, src, size);
+            memory::Copy(dest, src, size);
         }
 
         inline static void SetData(TChar* dest, TChar value, size_t size) noexcept
         {
-            Memory::Set(dest, static_cast<uint8_t>(value), size);
+            memory::Set(dest, static_cast<uint8_t>(value), size);
         }
 
         inline TChar* InitImpl(size_t size) noexcept
@@ -261,7 +261,7 @@ namespace quinte
         // O(1)
         [[nodiscard]] inline TChar ByteAt(size_t index) const
         {
-            QUINTE_AssertMsg(index < Size(), "Invalid index");
+            QU_AssertMsg(index < Size(), "Invalid index");
             return Data()[index];
         }
 
@@ -277,7 +277,7 @@ namespace quinte
                     return utf8::PeekDecode(iter);
             }
 
-            QUINTE_AssertMsg(0, "Invalid index");
+            QU_AssertMsg(0, "Invalid index");
             return 0;
         }
 
@@ -384,7 +384,7 @@ namespace quinte
 
         inline String& Append(const TChar* str, size_t count)
         {
-            QUINTE_AssertMsg(count == 0 || str != nullptr, "Couldn't append more than 0 chars from a null string");
+            QU_AssertMsg(count == 0 || str != nullptr, "Couldn't append more than 0 chars from a null string");
             if (count == 0)
             {
                 return *this;
@@ -456,7 +456,7 @@ namespace quinte
         {
             const size_t size = Size();
             const TChar* data = Data();
-            QUINTE_AssertMsg(start.m_Iter >= data && start.m_Iter <= data + size);
+            QU_Assert(start.m_Iter >= data && start.m_Iter <= data + size);
 
             const size_t searchSize = data + size - start.m_Iter;
             return Str::FindFirstOf(start.m_Iter, searchSize, search);

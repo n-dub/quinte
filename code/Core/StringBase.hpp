@@ -153,7 +153,7 @@ namespace quinte
                     return utf8::PeekDecode(iter);
             }
 
-            QUINTE_Assert(0);
+            QU_Assert(0);
             return 0;
         }
 

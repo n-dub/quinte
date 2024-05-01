@@ -1,9 +1,10 @@
+#pragma once
 #include <Application/BaseApplication.hpp>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
 
 #ifdef _DEBUG
-#    define QUINTE_USE_VULKAN_DEBUG_REPORT
+#    define QU_USE_VULKAN_DEBUG_REPORT
 #endif
 
 namespace quinte

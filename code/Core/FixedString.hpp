@@ -7,7 +7,6 @@ namespace quinte
     template<size_t TCapacity>
     class FixedString final
     {
-        static const size_t TCapacity = 256;
         static_assert(TCapacity <= (1 << 24));
 
         TChar m_Data[TCapacity];
@@ -18,6 +17,8 @@ namespace quinte
         friend class FixedFmt;
 
     public:
+        inline static constexpr size_t Cap = TCapacity;
+
         using Iterator = detail::StrIterator;
 
         inline FixedString() noexcept
@@ -30,8 +31,8 @@ namespace quinte
         inline FixedString(size_t length, TChar value) noexcept
             : m_Zero(0)
         {
-            QUINTE_Assert(length <= TCapacity);
-            Memory::Set(m_Data, value, length);
+            QU_Assert(length <= TCapacity);
+            memory::Set(m_Data, value, length);
             m_Size = static_cast<uint32_t>(length);
             m_Data[m_Size] = 0;
         }
@@ -39,8 +40,8 @@ namespace quinte
         inline FixedString(const TChar* str, size_t byteSize) noexcept
             : m_Zero(0)
         {
-            QUINTE_Assert(byteSize <= TCapacity);
-            Memory::Copy(m_Data, str, byteSize);
+            QU_Assert(byteSize <= TCapacity);
+            memory::Copy(m_Data, str, byteSize);
             m_Size = static_cast<uint32_t>(byteSize);
             m_Data[m_Size] = 0;
         }
@@ -73,7 +74,7 @@ namespace quinte
         // O(1)
         [[nodiscard]] inline TChar ByteAt(size_t index) const
         {
-            QUINTE_AssertMsg(index < Size(), "Invalid index");
+            QU_AssertMsg(index < Size(), "Invalid index");
             return Data()[index];
         }
 
@@ -89,7 +90,7 @@ namespace quinte
                     return utf8::PeekDecode(iter);
             }
 
-            QUINTE_AssertMsg(0, "Invalid index");
+            QU_AssertMsg(0, "Invalid index");
             return 0;
         }
 
@@ -146,14 +147,12 @@ namespace quinte
 
         inline FixedString& Append(const TChar* str, size_t count)
         {
-            QUINTE_AssertMsg(count == 0 || str != nullptr, "Couldn't append more than 0 chars from a null string");
-            QUINTE_Assert(count + Size() <= Capacity());
+            QU_AssertMsg(count == 0 || str != nullptr, "Couldn't append more than 0 chars from a null string");
+            QU_Assert(count + Size() <= Capacity());
             if (count == 0)
-            {
                 return *this;
-            }
 
-            Memory::Copy(Data() + Size(), str, count);
+            memory::Copy(Data() + Size(), str, count);
             m_Size += static_cast<uint32_t>(count);
             m_Data[m_Size] = 0;
             return *this;
@@ -166,12 +165,20 @@ namespace quinte
 
         inline FixedString& Append(TChar cp)
         {
-            QUINTE_Assert(Size() < Capacity());
+            QU_Assert(Size() < Capacity());
         }
 
         inline FixedString& Append(const TChar* str)
         {
             return Append(str, std::char_traits<TChar>::length(str));
+        }
+
+        inline void Resize(size_t length, TChar value) noexcept
+        {
+            QU_Assert(length <= TCapacity);
+            memory::Set(m_Data, value, length);
+            m_Size = static_cast<uint32_t>(length);
+            m_Data[m_Size] = 0;
         }
 
         inline FixedString& operator+=(StringSlice str)
@@ -203,7 +210,7 @@ namespace quinte
         {
             const size_t size = Size();
             const TChar* data = Data();
-            QUINTE_Assert(start.m_Iter >= data && start.m_Iter <= data + size);
+            QU_Assert(start.m_Iter >= data && start.m_Iter <= data + size);
 
             const size_t searchSize = data + size - start.m_Iter;
             return Str::FindFirstOf(start.m_Iter, searchSize, search);
@@ -324,6 +331,7 @@ namespace quinte
         {
             TChar* ptr = std::vformat_to(m_Data.Data(), fmt, std::make_format_args(std::forward<TArgs>(args)...));
             m_Data.m_Size = static_cast<uint32_t>(ptr - m_Data.Data());
+            QU_Assert(m_Data.m_Size <= TCapacity);
             *ptr = '\0';
         }
 
@@ -369,7 +377,7 @@ namespace quinte
     using FixFmt64 = FixedFmt<64>;
     using FixFmt128 = FixedFmt<128>;
     using FixFmt256 = FixedFmt<256>;
-    using FixFmt = FixedFmt<512>;
+    using FixFmt512 = FixedFmt<512>;
 } // namespace quinte
 
 namespace std

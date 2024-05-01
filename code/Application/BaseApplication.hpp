@@ -21,12 +21,9 @@ namespace quinte
         const FixStr256 m_Name;
         GLFWwindow* m_pWindow = nullptr;
 
-        ImVec4 m_ClearColor = { 0.45f, 0.55f, 0.60f, 1.00f };
+        ImVec4 m_ClearColor = { 41.0f, 41.0f, 41.0f, 1.0f / 255.0f };
 
-        inline BaseApplication(StringSlice name)
-            : m_Name(name)
-        {
-        }
+        BaseApplication(StringSlice name);
 
         virtual bool SetupBackend() = 0;
 
