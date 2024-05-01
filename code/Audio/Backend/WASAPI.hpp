@@ -58,7 +58,7 @@ namespace quinte
         struct ClientHandle
         {
             ComPtr<IAudioClient> AudioClient;
-            windows::Event Event;
+            threading::Event Event;
         };
 
         struct : ClientHandle

@@ -4,6 +4,88 @@
 
 namespace quinte::threading
 {
+    struct EventHandle final : TypedHandle<EventHandle, uint64_t, 0>
+    {
+    };
+
+
+    EventHandle CreateAutoResetEvent(StringSlice name, bool initialState = false);
+    EventHandle CreateManualResetEvent(StringSlice name, bool initialState = false);
+    void WaitEvent(EventHandle event);
+    void CloseEvent(EventHandle& event);
+    void* GetNativeEventHandle(EventHandle event);
+
+
+    class Event final : public NoCopy
+    {
+        EventHandle m_Handle;
+
+    public:
+        inline Event() = default;
+
+        inline Event(EventHandle handle) noexcept
+            : m_Handle(handle)
+        {
+        }
+
+        inline Event(Event&& other) noexcept
+            : m_Handle(other.m_Handle)
+        {
+            other.m_Handle.Reset();
+        }
+
+        inline Event& operator=(Event&& other) noexcept
+        {
+            Reset();
+            m_Handle = other.m_Handle;
+            other.m_Handle.Reset();
+            return *this;
+        }
+
+        inline ~Event()
+        {
+            Reset();
+        }
+
+        inline void* GetNativeHandle() const
+        {
+            return GetNativeEventHandle(m_Handle);
+        }
+
+        inline operator bool() const
+        {
+            return static_cast<bool>(m_Handle);
+        }
+
+        inline void Wait() const
+        {
+            if (!m_Handle)
+                return;
+
+            WaitEvent(m_Handle);
+        }
+
+        inline void Reset()
+        {
+            if (!m_Handle)
+                return;
+
+            WaitEvent(m_Handle);
+            CloseEvent(m_Handle);
+        }
+
+        inline static Event CreateAutoReset(StringSlice name, bool initialState = false)
+        {
+            return Event{ CreateAutoResetEvent(name, initialState) };
+        }
+
+        inline static Event CreateManualReset(StringSlice name, bool initialState = false)
+        {
+            return Event{ CreateManualResetEvent(name, initialState) };
+        }
+    };
+
+
     typedef void (*ThreadFunction)(void*);
 
 

@@ -514,12 +514,12 @@ namespace quinte
                 if (!CheckHR(captureAudioClient->GetService(__uuidof(IAudioCaptureClient), &captureClient)))
                     return;
 
-                auto captureEvent = windows::Event::CreateAutoReset("WASAPI/CaptureEvent");
+                auto captureEvent = threading::Event::CreateAutoReset("WASAPI/CaptureEvent");
                 QU_Assert(captureEvent);
                 if (!captureEvent)
                     return;
 
-                if (!CheckHR(captureAudioClient->SetEventHandle(captureEvent.GetHandle())))
+                if (!CheckHR(captureAudioClient->SetEventHandle(captureEvent.GetNativeHandle())))
                     return;
 
                 m_CaptureHandle.CaptureClient = captureClient;
@@ -576,12 +576,12 @@ namespace quinte
                 if (!CheckHR(renderAudioClient->GetService(__uuidof(IAudioRenderClient), &renderClient)))
                     return;
 
-                auto renderEvent = windows::Event::CreateAutoReset("WASAPI/RenderEvent");
+                auto renderEvent = threading::Event::CreateAutoReset("WASAPI/RenderEvent");
                 QU_Assert(renderEvent);
                 if (!renderEvent)
                     return;
 
-                if (!CheckHR(renderAudioClient->SetEventHandle(renderEvent.GetHandle())))
+                if (!CheckHR(renderAudioClient->SetEventHandle(renderEvent.GetNativeHandle())))
                     return;
 
                 m_RenderHandle.RenderClient = renderClient;

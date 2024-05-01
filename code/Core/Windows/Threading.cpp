@@ -38,6 +38,39 @@ namespace quinte::threading
     } // namespace
 
 
+    EventHandle CreateAutoResetEvent(StringSlice name, bool initialState)
+    {
+        QU_Unused(name);
+        return EventHandle{ reinterpret_cast<uint64_t>(CreateEventW(nullptr, FALSE, initialState ? TRUE : FALSE, nullptr)) };
+    }
+
+
+    EventHandle CreateManualResetEvent(StringSlice name, bool initialState)
+    {
+        QU_Unused(name);
+        return EventHandle{ reinterpret_cast<uint64_t>(CreateEventW(nullptr, TRUE, initialState ? TRUE : FALSE, nullptr)) };
+    }
+
+
+    void WaitEvent(EventHandle event)
+    {
+        WaitForSingleObject(reinterpret_cast<HANDLE>(event.Value), INFINITE);
+    }
+
+
+    void CloseEvent(EventHandle& event)
+    {
+        CloseHandle(reinterpret_cast<HANDLE>(event.Value));
+        event.Reset();
+    }
+
+
+    void* GetNativeEventHandle(EventHandle event)
+    {
+        return reinterpret_cast<void*>(event.Value);
+    }
+
+
     ThreadHandle CreateThread(StringSlice name, ThreadFunction startRoutine, void* pUserData, Priority priority, size_t stackSize)
     {
         auto* pData = memory::DefaultNew<ThreadDataImpl>();
