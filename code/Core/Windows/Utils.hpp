@@ -26,7 +26,7 @@ namespace quinte::windows
         inline WideString(StringSlice str)
         {
             int count = MultiByteToWideChar(CP_UTF8, 0, str.Data(), static_cast<int>(str.Size()), nullptr, 0);
-            QU_Assert(count >= 0 && count <= TSize);
+            QU_Assert(count >= 0 && static_cast<size_t>(count) <= TSize);
 
             MultiByteToWideChar(CP_UTF8, 0, str.Data(), static_cast<int>(str.Size()), Data, count);
             Data[count] = 0;
@@ -41,7 +41,7 @@ namespace quinte::windows
     inline void WideStringToUTF8(LPCWSTR wideString, FixedString<TCapacity>& utfString)
     {
         int count = WideCharToMultiByte(CP_UTF8, 0, wideString, -1, nullptr, 0, nullptr, nullptr);
-        QU_Assert(count >= 0 && count <= TCapacity);
+        QU_Assert(count >= 0 && static_cast<size_t>(count) <= TCapacity);
 
         utfString.Resize(count, '\0');
         WideCharToMultiByte(CP_UTF8, 0, wideString, -1, utfString.Data(), count, nullptr, nullptr);

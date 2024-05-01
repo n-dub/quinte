@@ -38,6 +38,7 @@ namespace quinte
             Data[0] = static_cast<uint8_t>((value & 0x0000ff) >> 0);
             Data[1] = static_cast<uint8_t>((value & 0x00ff00) >> 8);
             Data[2] = static_cast<uint8_t>((value & 0xff0000) >> 16);
+            return *this;
         }
 
         inline explicit operator float() const

@@ -41,7 +41,7 @@ namespace quinte
     struct BackendStreamData final
     {
         std::mutex Mutex;
-        BackendStreamCallbackInfo CallbackInfo = { 0 };
+        BackendStreamCallbackInfo CallbackInfo{};
         std::atomic<audio::StreamState> State = audio::StreamState::Closed;
         BackendStreamMode Mode = BackendStreamMode::None;
         uint32_t SampleRate = 0;

@@ -79,7 +79,7 @@ namespace quinte::memory
 
         inline void do_deallocate(void*, size_t, size_t) override {}
 
-        inline bool do_is_equal(const std::pmr::memory_resource& other) const noexcept
+        inline bool do_is_equal(const std::pmr::memory_resource& other) const noexcept override
         {
             return this == &other;
         }

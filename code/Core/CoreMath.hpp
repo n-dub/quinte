@@ -8,41 +8,35 @@
 
 namespace quinte
 {
-    template<class T>
-    requires std::integral<T> || std::floating_point<T>
+    template<std::regular T>
     inline constexpr T Max(const T& a, const T& b)
     {
         return a < b ? b : a;
     }
 
 
-    template<class T>
-    requires std::integral<T> || std::floating_point<T>
+    template<std::regular T>
     inline constexpr T Min(const T& a, const T& b)
     {
         return b < a ? b : a;
     }
 
 
-    template<class TValue, class TClamp = TValue>
-    requires std::integral<TValue> && std::integral<TClamp>
-        || std::floating_point<TValue> && std::floating_point<TClamp>
-        inline constexpr TValue Clamp(const TValue& value, const TClamp& min, const TClamp& max)
+    template<std::regular TValue, std::regular TClamp = TValue>
+    inline constexpr TValue Clamp(const TValue& value, const TClamp& min, const TClamp& max)
     {
         return Min(max, Max(min, value));
     }
 
 
-    template<class T>
-    requires std::floating_point<T>
+    template<std::floating_point T>
     inline constexpr T Lerp(T a, T b, T t)
     {
         return a + t * (b - a);
     }
 
 
-    template<class T>
-    requires std::floating_point<T>
+    template<std::floating_point T>
     inline constexpr T ApproxEqual(T a, T b, T epsilon = std::numeric_limits<T>::epsilon())
     {
         return a < b ? (b - a) < epsilon : (a - b) < epsilon;
@@ -51,8 +45,7 @@ namespace quinte
 
     namespace math
     {
-        template<class T>
-        requires std::floating_point<T>
+        template<std::floating_point T>
         inline constexpr T Pow(T base, T exp)
         {
             if (std::is_constant_evaluated())
@@ -62,8 +55,7 @@ namespace quinte
         }
 
 
-        template<class T>
-        requires std::floating_point<T>
+        template<std::floating_point T>
         inline constexpr T Log(T x)
         {
             if (std::is_constant_evaluated())
@@ -73,8 +65,7 @@ namespace quinte
         }
 
 
-        template<class T>
-        requires std::floating_point<T>
+        template<std::floating_point T>
         inline constexpr T Log10(T x)
         {
             if (std::is_constant_evaluated())
@@ -84,8 +75,7 @@ namespace quinte
         }
 
 
-        template<class T>
-        requires std::floating_point<T>
+        template<std::floating_point T>
         inline constexpr std::pair<T, T> SinCos(T x)
         {
             if (std::is_constant_evaluated())

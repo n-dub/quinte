@@ -15,6 +15,7 @@
 #pragma comment(lib, "mfuuid.lib")
 #pragma comment(lib, "wmcodecdspuuid")
 
+QU_PUSH_CLANG_WARNING("-Wlanguage-extension-token")
 
 namespace quinte
 {
@@ -904,7 +905,7 @@ namespace quinte
         pInMediaBuffer.Reset();
         pInSample.Reset();
 
-        MFT_OUTPUT_DATA_BUFFER outDataBuffer = { 0 };
+        MFT_OUTPUT_DATA_BUFFER outDataBuffer{};
         QU_Defer
         {
             memory::SafeRelease(outDataBuffer.pSample);

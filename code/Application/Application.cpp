@@ -161,7 +161,7 @@ namespace quinte
             }
 
             const StringSlice streamStateString = audio::ToString(pAPI->GetState());
-            Text("Current stream state: %.*s", streamStateString.Size(), streamStateString.Data());
+            Text("Current stream state: %.*s", static_cast<int32_t>(streamStateString.Size()), streamStateString.Data());
 
             if (Button("Open Stream"))
             {

@@ -1,5 +1,5 @@
 #pragma once
-#include <Core/Base.hpp>
+#include <Core/CoreMath.hpp>
 #include <concepts>
 #include <cstring>
 #include <memory>

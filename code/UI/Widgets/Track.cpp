@@ -240,7 +240,7 @@ namespace quinte
                 pDrawList->AddLine(ImVec2{ grabRectMin.x, offset2 }, ImVec2{ grabRectMin.x + kWidth, offset2 }, thinLineColor);
             }
 
-            return false;
+            return valueChanged;
         }
 
 

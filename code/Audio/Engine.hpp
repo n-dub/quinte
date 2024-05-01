@@ -255,6 +255,8 @@ namespace quinte
     class IAudioAPI
     {
     public:
+        virtual ~IAudioAPI() = default;
+
         virtual audio::ResultCode UpdateDeviceList() = 0;
 
         virtual std::span<const audio::DeviceDesc> GetDevices() const = 0;

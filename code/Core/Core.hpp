@@ -25,8 +25,7 @@
 namespace quinte
 {
     //! \brief Find ceiling of x divided by y.
-    template<class T1, class T2>
-    requires std::unsigned_integral<T1> && std::unsigned_integral<T2>
+    template<std::unsigned_integral T1, std::unsigned_integral T2>
     inline auto CeilDivide(T1 x, T2 y) -> decltype(x / y)
     {
         return (x + y - 1) / y;
@@ -37,8 +36,7 @@ namespace quinte
     //!
     //! \param x     - Value to align.
     //! \param align - Alignment to use.
-    template<class T, class TAlign = T>
-    requires std::unsigned_integral<T> && std::unsigned_integral<TAlign>
+    template<std::unsigned_integral T, std::unsigned_integral TAlign = T>
     inline T AlignUp(T x, TAlign align)
     {
         auto alignT = static_cast<T>(align);
@@ -61,8 +59,7 @@ namespace quinte
     //!
     //! \param x - Value to align.
     //! \tparam TValue - Alignment to use.
-    template<uint32_t TValue, class T>
-    requires std::unsigned_integral<T>
+    template<uint32_t TValue, std::unsigned_integral T>
     inline constexpr T AlignUp(T x)
     {
         return (x + (TValue - 1)) & ~(TValue - 1);
@@ -73,8 +70,7 @@ namespace quinte
     //!
     //! \param x     - Value to align.
     //! \param align - Alignment to use.
-    template<class T, class TAlign = T>
-    requires std::unsigned_integral<T> && std::unsigned_integral<TAlign>
+    template<std::unsigned_integral T, std::unsigned_integral TAlign = T>
     inline T AlignDown(T x, TAlign align)
     {
         return (x & ~(align - 1));
@@ -96,8 +92,7 @@ namespace quinte
     //!
     //! \param x - Value to align.
     //! \tparam TValue - Alignment to use.
-    template<uint32_t TValue, class T>
-    requires std::unsigned_integral<T>
+    template<uint32_t TValue, std::unsigned_integral T>
     inline constexpr T AlignDown(T x)
     {
         return (x & ~(TValue - 1));
@@ -108,8 +103,7 @@ namespace quinte
     //!
     //! \param bitCount  - The number of ones in the created mask.
     //! \param leftShift - The number of zeros to the right of the created mask.
-    template<class T>
-    requires std::unsigned_integral<T>
+    template<std::unsigned_integral T>
     inline constexpr T MakeMask(T bitCount, T leftShift)
     {
         auto typeBitCount = sizeof(T) * 8;
@@ -137,8 +131,7 @@ namespace quinte
 
 
     //! \brief A simple type used to discard out parameters from external functions.
-    template<class T>
-    requires std::is_trivial_v<T>
+    template<std::semiregular T>
     struct Discard final
     {
         T Value;
@@ -150,8 +143,7 @@ namespace quinte
     };
 
 
-    template<class T, class TValue, TValue TInvalidValue = std::numeric_limits<TValue>::max()>
-    requires std::is_integral_v<TValue>
+    template<class T, std::integral TValue, TValue TInvalidValue = std::numeric_limits<TValue>::max()>
     struct TypedHandle
     {
         using BaseType = TValue;
@@ -212,8 +204,7 @@ namespace quinte
 
     namespace detail
     {
-        template<typename TFunc>
-        requires std::invocable<TFunc>
+        template<std::invocable TFunc>
         class DeferImpl final : public NoCopyMove
         {
             TFunc m_Func;
@@ -233,8 +224,7 @@ namespace quinte
 
         struct DeferOperatorImplType final
         {
-            template<typename F>
-            requires std::invocable<F>
+            template<std::invocable F>
             inline DeferImpl<F> operator+=(F&& f)
             {
                 return DeferImpl<F>(std::forward<F>(f));
@@ -254,7 +244,7 @@ namespace quinte
 } // namespace quinte
 
 
-#define QU_ENUM_BIT_OPERATORS(Name)                                                                                          \
+#define QU_ENUM_BIT_OPERATORS(Name)                                                                                              \
     inline constexpr Name operator|(Name a, Name b)                                                                              \
     {                                                                                                                            \
         return static_cast<Name>(::quinte::enum_cast(a) | ::quinte::enum_cast(b));                                               \
