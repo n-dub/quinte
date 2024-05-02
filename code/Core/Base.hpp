@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <cstdint>
 
 #if defined _WIN32 || defined _WIN64 || defined _WINDOWS
@@ -17,22 +17,6 @@
 #    error Unsupported platform
 #endif
 
-
-#if NDEBUG
-#    define QU_RELEASE 1
-#else
-#    define QU_DEBUG 1
-#endif
-
-
-#define QU_Stringify(txt) #txt
-
-#define QU_CONCAT(a, b) QU_CONCAT_INNER(a, b)
-#define QU_CONCAT_INNER(a, b) a##b
-
-#define QU_UNIQUE_NAME(base) QU_CONCAT(base, __COUNTER__)
-
-
 #if defined __clang__
 #    define QU_COMPILER_CLANG 1
 
@@ -45,8 +29,7 @@
 #    define QU_PUSH_MSVC_WARNING(...)
 #    define QU_POP_MSVC_WARNING
 
-#    define QU_PUSH_CLANG_WARNING(warn)                                                                                      \
-        _Pragma("clang diagnostic push") _Pragma(QU_Stringify(clang diagnostic ignored warn))
+#    define QU_PUSH_CLANG_WARNING(warn) _Pragma("clang diagnostic push") _Pragma(QU_Stringify(clang diagnostic ignored warn))
 #    define QU_POP_CLANG_WARNING _Pragma("clang diagnostic pop")
 
 #    define QU_PRETTY_FUNCTION __PRETTY_FUNCTION__
@@ -75,3 +58,19 @@
 #        define QU_FORCE_INLINE __forceinline
 #    endif
 #endif
+
+#if NDEBUG
+#    define QU_RELEASE 1
+#else
+#    define QU_DEBUG 1
+#endif
+
+
+#define QU_Stringify(txt) #txt
+
+#define QU_CONCAT(a, b) QU_CONCAT_INNER(a, b)
+#define QU_CONCAT_INNER(a, b) a##b
+
+#define QU_UNIQUE_NAME(base) QU_CONCAT(base, __COUNTER__)
+
+#define QU_RESTRICT __restrict

@@ -1,8 +1,9 @@
-#pragma once
+﻿#pragma once
 #include <Core/Base.hpp>
 #include <Core/CoreMath.hpp>
 #include <Core/CoreTypes.hpp>
 #include <Core/Memory.hpp>
+#include <Core/RefCount.hpp>
 #include <cassert>
 #include <concepts>
 #include <format>
@@ -15,10 +16,14 @@
 
 #if QU_DEBUG
 #    define QU_Assert(expr) assert(expr)
+#    define QU_AssertDebug(expr) assert(expr)
 #    define QU_AssertMsg(expr, msg) assert(expr)
+#    define QU_AssertDebugMsg(expr, msg) assert(expr)
 #else
-#    define QU_Assert(expr) QU_Unused(expr)
-#    define QU_AssertMsg(expr, msg) QU_Unused(expr)
+#    define QU_Assert(expr) assert(expr)
+#    define QU_AssertDebug(expr) QU_Unused(expr)
+#    define QU_AssertMsg(expr, msg) assert(expr)
+#    define QU_AssertDebugMsg(expr, msg) QU_Unused(expr)
 #endif
 
 

@@ -1,2 +1,9 @@
-[*{.cpp,.hpp}]
-encoding=utf-8-bom
+root = true
+
+[*]
+charset = utf-8-bom
+insert_final_newline = true
+
+[CMakeLists.txt]
+indent_style = space
+indent_size = 4

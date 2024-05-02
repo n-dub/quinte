@@ -1,4 +1,4 @@
-#include <Core/Threading.hpp>
+﻿#include <Core/Threading.hpp>
 #include <Core/Windows/Utils.hpp>
 
 namespace quinte::threading
@@ -21,7 +21,7 @@ namespace quinte::threading
             ~ThreadDataHolder()
             {
                 if (pData)
-                    memory::DefaultDelete(pData, sizeof(ThreadDataImpl));
+                    memory::DefaultDelete(pData);
             }
         };
 

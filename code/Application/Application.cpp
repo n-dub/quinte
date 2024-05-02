@@ -190,10 +190,9 @@ namespace quinte
 
             SameLine();
             static TrackMixerView s_TrackMixerView2;
-            s_TrackMixerView2.Color = colors::kDarkGreen;
+            s_TrackMixerView2.Color = colors::kRebeccaPurple;
             s_TrackMixerView2.Volume = s_TrackMixerView2.FaderAmplitude;
             s_TrackMixerView2.ID = 2;
-            s_TrackMixerView2.Color = colors::kRebeccaPurple;
             s_TrackMixerView2.Draw();
         }
 

@@ -232,7 +232,7 @@ namespace quinte
 
         QU_Defer
         {
-            if (m_LastResult != audio::ResultCode::Success)
+            if (GetLastResultCode() != audio::ResultCode::Success)
                 CloseStream();
         };
 

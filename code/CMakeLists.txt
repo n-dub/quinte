@@ -1,4 +1,4 @@
-set(QUINTE_SRC
+﻿set(QUINTE_SRC
     Application/Application.hpp
     Application/Application.cpp
     Application/BaseApplication.hpp
@@ -11,6 +11,9 @@ set(QUINTE_SRC
     Audio/Backend/RingBuffer.hpp
     Audio/Backend/WASAPI.hpp
     Audio/Backend/WASAPI.cpp
+    Audio/Buffers/Buffer.hpp
+    Audio/Buffers/AudioBuffer.hpp
+    Audio/Buffers/AudioBuffer.cpp
     Audio/Engine.hpp
     Audio/Engine.cpp
 
@@ -21,6 +24,8 @@ set(QUINTE_SRC
     Core/FixedString.hpp
     Core/FixedVector.hpp
     Core/Memory.hpp
+    Core/Memory.cpp
+    Core/RefCount.hpp
     Core/String.hpp
     Core/StringBase.hpp
     Core/StringSlice.hpp
@@ -32,7 +37,6 @@ set(QUINTE_SRC
     Core/${QUINTE_PLATFORM_NAME}/Threading.cpp
     Core/${QUINTE_PLATFORM_NAME}/Memory.cpp
 
-    UI/${QUINTE_PLATFORM_NAME}/Alerts.cpp
     UI/Widgets/Track.hpp
     UI/Widgets/Track.cpp
     UI/Alerts.hpp
@@ -40,20 +44,19 @@ set(QUINTE_SRC
     UI/Icons.hpp
     UI/Utils.hpp
     UI/Utils.cpp
-
-    main.cpp
+    UI/${QUINTE_PLATFORM_NAME}/Alerts.cpp
 )
 
 
-add_executable(quinte ${QUINTE_SRC})
-target_link_libraries(quinte imgui gcem mimalloc-static)
-target_include_directories(quinte PRIVATE "${QUINTE_PROJECT_ROOT}/code")
+add_library(quinte-lib STATIC ${QUINTE_SRC})
+target_link_libraries(quinte-lib imgui gcem mimalloc-static)
+target_include_directories(quinte-lib PUBLIC "${QUINTE_PROJECT_ROOT}/code")
+quinte_configure_target(quinte-lib)
 
-if (QUINTE_COMPILER_MSVC)
-    target_compile_options(quinte PRIVATE /utf-8 /W4 /WX /ZI /INCREMENTAL)
-else ()
-    target_compile_options(quinte PRIVATE -Wall -Wextra -pedantic -Werror)
-endif ()
+
+add_executable(quinte main.cpp)
+target_link_libraries(quinte quinte-lib)
+quinte_configure_target(quinte)
 
 
 file(GLOB_RECURSE

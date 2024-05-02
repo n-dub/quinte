@@ -1,4 +1,4 @@
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+﻿if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(QUINTE_COMPILER_CLANG ON)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(QUINTE_COMPILER_GCC ON)
@@ -47,3 +47,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(QUINTE_RESOURCE_DIR ${CMAKE_BINARY_DIR}/resources)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+function (quinte_configure_target TARGET)
+    if (QUINTE_COMPILER_MSVC)
+        target_compile_options(${TARGET} PUBLIC /utf-8 /W4 /WX /ZI /INCREMENTAL)
+    else ()
+        target_compile_options(${TARGET} PUBLIC -Wall -Wextra -pedantic -Werror)
+    endif ()
+endfunction ()

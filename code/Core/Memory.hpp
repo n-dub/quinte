@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <Core/CoreMath.hpp>
 #include <concepts>
 #include <cstring>
@@ -8,6 +8,7 @@
 namespace quinte::memory
 {
     inline constexpr size_t kDefaultAlignment = 16;
+    inline constexpr size_t kCacheLineSize = 64;
 
 
     inline constexpr size_t operator""_KB(size_t bytes)
@@ -53,10 +54,19 @@ namespace quinte::memory
     } // namespace platform
 
 
-    //! \brief Set byteCount bytes of memory at pDestination to value.
-    inline static void Set(void* pDestination, uint8_t value, size_t byteCount)
+    //! \brief Set byteCount bytes of memory at pDestination to zero.
+    template<std::default_initializable T>
+    inline static void Zero(T* pDestination, size_t elementCount)
     {
-        memset(pDestination, value, byteCount);
+        if constexpr (std::is_floating_point_v<T> || std::is_integral_v<T>)
+        {
+            memset(pDestination, 0, elementCount * sizeof(T));
+        }
+        else
+        {
+            for (uint32_t i = 0; i < elementCount; ++i)
+                new (&pDestination[i]) T;
+        }
     }
 
 
@@ -76,6 +86,68 @@ namespace quinte::memory
     }
 
 
+    namespace detail
+    {
+        void* DefaultAlloc(size_t byteSize);
+        void* DefaultAlloc(size_t byteSize, size_t byteAlignment);
+        void DefaultFree(void* ptr);
+    } // namespace detail
+
+
+    //! \brief Allocate memory aligned by kDefaultAlignment.
+    //!
+    //! This is a low-level function, it doesn't account for sizeof(T) or alignof(T).
+    //! It doesn't call constructors and doesn't initialize the memory.
+    //! Prefer using DefaultNew<T> if you need to allocate an object.
+    //!
+    //! \param byteSize Size of the memory to allocate in bytes.
+    template<class T>
+    inline T* DefaultAlloc(size_t byteSize)
+    {
+        return static_cast<T*>(detail::DefaultAlloc(byteSize));
+    }
+
+
+    //! \brief Allocate memory aligned by byteAlignment.
+    //!
+    //! This is a low-level function, it doesn't account for sizeof(T) or alignof(T).
+    //! It doesn't call constructors and doesn't initialize the memory.
+    //! Prefer using DefaultNew<T> if you need to allocate an object.
+    //!
+    //! \param byteSize Size of the memory to allocate in bytes.
+    //! \param byteAlignment Alignment of the memory to allocate in bytes.
+    template<class T>
+    inline T* DefaultAlloc(size_t byteSize, size_t byteAlignment)
+    {
+        return static_cast<T*>(detail::DefaultAlloc(byteSize, byteAlignment));
+    }
+
+
+    //! \brief Free memory allocated by DefaultAlloc<T>.
+    //!
+    //! This is a low-level function, it doesn't call destructors.
+    //! To free memory allocated by DefaultNew<T> and destroy the object use DefaultDelete<T>.
+    inline void DefaultFree(void* ptr)
+    {
+        detail::DefaultFree(ptr);
+    }
+
+
+    //! \brief Free memory allocated by DefaultAlloc<T> and set the pointer to null.
+    //!
+    //! This is a low-level function, it doesn't call destructors.
+    //! To free memory allocated by DefaultNew<T> and destroy the object use DefaultDelete<T>.
+    template<class T>
+    inline void SafeFree(T*& ptr)
+    {
+        if (ptr)
+        {
+            detail::DefaultFree(ptr);
+            ptr = nullptr;
+        }
+    }
+
+
     //! \brief Create a new object of type T using the provided allocator.
     //!
     //! \param pAllocator - The allocator to use.
@@ -86,8 +158,8 @@ namespace quinte::memory
     //!
     //! \return The allocated object.
     template<class T, class TAllocator, class... TArgs>
-    inline T* New(TAllocator* pAllocator, TArgs&&... args)
     requires std::constructible_from<T, TArgs...>
+    inline T* New(TAllocator* pAllocator, TArgs&&... args)
     {
         return new (pAllocator->allocate(sizeof(T), detail::kDefaultAllocationAlignment<T>)) T(std::forward<TArgs>(args)...);
     }
@@ -102,7 +174,7 @@ namespace quinte::memory
     //! \tparam TAllocator - The type of the provided allocator.
     //!
     //! \return The allocated array.
-    template<class T, class TAllocator>
+    template<std::default_initializable T, class TAllocator>
     inline T* NewArray(TAllocator* pAllocator, size_t count)
     {
         return new (pAllocator->allocate(sizeof(T) * count, detail::kDefaultAllocationAlignment<T>)) T[count];
@@ -117,11 +189,10 @@ namespace quinte::memory
     //!
     //! \return The allocated object.
     template<class T, class... TArgs>
-    inline T* DefaultNew(TArgs&&... args)
     requires std::constructible_from<T, TArgs...>
+    inline T* DefaultNew(TArgs&&... args)
     {
-        return new (std::pmr::get_default_resource()->allocate(sizeof(T), detail::kDefaultAllocationAlignment<T>))
-            T(std::forward<TArgs>(args)...);
+        return new (detail::DefaultAlloc(sizeof(T), detail::kDefaultAllocationAlignment<T>)) T(std::forward<TArgs>(args)...);
     }
 
 
@@ -132,11 +203,10 @@ namespace quinte::memory
     //! \tparam T - The type of elements in the array to allocate.
     //!
     //! \return The allocated array.
-    template<class T>
+    template<std::default_initializable T>
     inline T* DefaultNewArray(size_t count)
     {
-        return new (std::pmr::get_default_resource()->allocate(sizeof(T) * count, detail::kDefaultAllocationAlignment<T>))
-            T[count];
+        return new (detail::DefaultAlloc(sizeof(T) * count, detail::kDefaultAllocationAlignment<T>)) T[count];
     }
 
 
@@ -181,10 +251,10 @@ namespace quinte::memory
     //!
     //! \tparam T - The type of the object to delete.
     template<class T>
-    inline void DefaultDelete(T* pointer, size_t byteSize)
+    inline void DefaultDelete(T* pointer)
     {
         pointer->~T();
-        std::pmr::get_default_resource()->deallocate(pointer, byteSize, detail::kDefaultAllocationAlignment<T>);
+        detail::DefaultFree(pointer);
     }
 
 
@@ -200,7 +270,7 @@ namespace quinte::memory
         for (uint32_t i = 0; i < count; ++i)
             pointer[i].~T();
 
-        std::pmr::get_default_resource()->deallocate(pointer, sizeof(T) * count, detail::kDefaultAllocationAlignment<T>);
+        detail::DefaultFree(pointer);
     }
 
 
@@ -234,19 +304,20 @@ namespace quinte::memory
 
         inline void operator()(T* ptr) const noexcept
         {
-            DefaultDelete(ptr, 0);
+            ptr->~T();
+            DefaultFree(ptr);
         }
     };
 
 
     template<class T>
-    struct DefaultDeleterNoDealloc final
+    struct DefaultDeleterNoFree final
     {
-        constexpr DefaultDeleterNoDealloc() noexcept = default;
+        constexpr DefaultDeleterNoFree() noexcept = default;
 
         template<class T2>
         requires std::convertible_to<T2*, T*>
-        inline DefaultDeleterNoDealloc(const DefaultDeleterNoDealloc<T2>&) noexcept
+        inline DefaultDeleterNoFree(const DefaultDeleterNoFree<T2>&) noexcept
         {
         }
 
@@ -258,7 +329,7 @@ namespace quinte::memory
 
 
     template<class T>
-    requires std::is_trivial_v<T>
+    requires std::is_trivially_destructible_v<T>
     struct DefaultDeleter<T[]>
     {
         constexpr DefaultDeleter() noexcept = default;
@@ -273,7 +344,7 @@ namespace quinte::memory
         requires std::convertible_to<T2 (*)[], T (*)[]>
         inline void operator()(T2* ptr) const noexcept
         {
-            DefaultDeleteArray(ptr, 0);
+            DefaultFree(ptr);
         }
     };
 
@@ -284,7 +355,7 @@ namespace quinte::memory
 
     template<class T>
     requires(!std::is_array_v<T>)
-    using unique_temp_ptr = std::unique_ptr<T, DefaultDeleterNoDealloc<T>>;
+    using unique_temp_ptr = std::unique_ptr<T, DefaultDeleterNoFree<T>>;
 
 
     template<class T, class... TArgs>

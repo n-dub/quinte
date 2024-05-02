@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <Core/StringSlice.hpp>
 
 namespace quinte
@@ -101,12 +101,12 @@ namespace quinte
 
         inline static TChar* Allocate(size_t s) noexcept
         {
-            return static_cast<TChar*>(std::pmr::get_default_resource()->allocate(s, memory::kDefaultAlignment));
+            return memory::DefaultAlloc<TChar>(s);
         }
 
-        inline static void Deallocate(TChar* ptr, size_t size) noexcept
+        inline static void Deallocate(TChar* ptr) noexcept
         {
-            std::pmr::get_default_resource()->deallocate(ptr, size);
+            memory::DefaultFree(ptr);
         }
 
         inline static void CopyData(TChar* dest, const TChar* src, size_t size) noexcept
@@ -116,7 +116,7 @@ namespace quinte
 
         inline static void SetData(TChar* dest, TChar value, size_t size) noexcept
         {
-            memory::Set(dest, static_cast<uint8_t>(value), size);
+            memset(dest, static_cast<uint8_t>(value), size);
         }
 
         inline TChar* InitImpl(size_t size) noexcept
@@ -167,7 +167,7 @@ namespace quinte
             if (copySize)
                 CopyData(newData + copyCount + addCount, oldData + delCount, copySize);
             if (oldCap + 1 != MinCapacity)
-                Deallocate(oldData, oldCap + 1);
+                Deallocate(oldData);
             m_Data.L.Data = newData;
             SetLCap(cap + 1);
             oldSize = copyCount + addCount + copySize;
@@ -245,7 +245,7 @@ namespace quinte
         inline ~String() noexcept
         {
             if (IsLong())
-                Deallocate(m_Data.L.Data, GetLCap());
+                Deallocate(m_Data.L.Data);
         }
 
         [[nodiscard]] inline const TChar* Data() const noexcept
@@ -338,7 +338,7 @@ namespace quinte
             const size_t oldSize = Size();
             CopyData(newData, oldData, oldSize + 1);
             if (IsLong())
-                Deallocate(oldData, cap + 1);
+                Deallocate(oldData);
 
             SetLCap(reserve + 1);
             SetLSize(oldSize);
@@ -359,7 +359,7 @@ namespace quinte
                 TChar* oldData = m_Data.L.Data;
 
                 CopyData(newData, oldData, size + 1);
-                Deallocate(oldData, cap + 1);
+                Deallocate(oldData);
                 SetSSize(size);
             }
             else
@@ -368,7 +368,7 @@ namespace quinte
                 TChar* oldData = m_Data.L.Data;
 
                 CopyData(newData, oldData, size + 1);
-                Deallocate(oldData, cap + 1);
+                Deallocate(oldData);
 
                 SetLCap(reserve + 1);
                 SetLSize(size);
