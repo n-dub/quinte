@@ -1,16 +1,23 @@
-#pragma once
+﻿#pragma once
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <Windows.h>
 #include <combaseapi.h>
-#include <wrl.h>
-using Microsoft::WRL::ComPtr;
 
 #include <Core/FixedString.hpp>
 #include <Core/StringSlice.hpp>
 
 namespace quinte::windows
 {
+    template<std::derived_from<IUnknown> T>
+    inline static void** QU_IID_PPV_ARGS_Helper(detail::PtrRef<Rc<T>> pp)
+    {
+        return static_cast<void**>(pp);
+    }
+
+#define QU_IID_PPV_ARGS(ppType) __uuidof(**(ppType)), ::quinte::windows::QU_IID_PPV_ARGS_Helper(ppType)
+
+
     inline bool CheckHR(HRESULT hr)
     {
         QU_Assert(SUCCEEDED(hr));

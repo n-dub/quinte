@@ -1,4 +1,4 @@
-#include <Audio/Backend/RingBuffer.hpp>
+﻿#include <Audio/Backend/RingBuffer.hpp>
 #include <Audio/Backend/WASAPI.hpp>
 #include <Core/TempAllocator.hpp>
 
@@ -28,8 +28,8 @@ namespace quinte
 
     static HRESULT InitializeAudioClient(IAudioClient* pAudioClient, WAVEFORMATEX* pFormat)
     {
-        ComPtr<IAudioClient3> pAudioClient3 = nullptr;
-        pAudioClient->QueryInterface(__uuidof(IAudioClient3), &pAudioClient3);
+        Rc<IAudioClient3> pAudioClient3 = nullptr;
+        pAudioClient->QueryInterface(QU_IID_PPV_ARGS(&pAudioClient3));
 
         if (pAudioClient3)
         {
@@ -67,7 +67,7 @@ namespace quinte
 
     audio::ResultCode AudioBackendWASAPI::EnumerateDevicesImpl(EDataFlow dataFlow)
     {
-        ComPtr<IMMDeviceCollection> pDevices;
+        Rc<IMMDeviceCollection> pDevices;
 
         if (!CheckHR(m_DeviceEnumerator->EnumAudioEndpoints(dataFlow, DEVICE_STATE_ACTIVE, &pDevices)))
             return audio::ResultCode::FailUnknown;
@@ -84,7 +84,7 @@ namespace quinte
 
         for (UINT deviceIndex = 0; deviceIndex < deviceCount; ++deviceIndex)
         {
-            ComPtr<IMMDevice> pDevice;
+            Rc<IMMDevice> pDevice;
             if (!CheckHR(pDevices->Item(deviceIndex, &pDevice)))
                 continue;
 
@@ -144,7 +144,7 @@ namespace quinte
             m_Devices.push_back(desc);
         }
 
-        ComPtr<IMMDevice> pDefaultDevice;
+        Rc<IMMDevice> pDefaultDevice;
         if (!CheckHR(m_DeviceEnumerator->GetDefaultAudioEndpoint(dataFlow, eConsole, &pDefaultDevice)))
             return audio::ResultCode::Success;
 
@@ -170,12 +170,12 @@ namespace quinte
 
     bool AudioBackendWASAPI::GetDeviceInfoImpl(LPCWSTR deviceID, EDataFlow dataFlow, audio::DeviceDesc& deviceDesc)
     {
-        ComPtr<IMMDevice> pDevice;
+        Rc<IMMDevice> pDevice;
         const HRESULT hrGet = m_DeviceEnumerator->GetDevice(deviceID, &pDevice);
         if (FAILED(hrGet))
             return false;
 
-        ComPtr<IPropertyStore> pProperties;
+        Rc<IPropertyStore> pProperties;
         const HRESULT hrProp = pDevice->OpenPropertyStore(STGM_READ, &pProperties);
         if (FAILED(hrProp))
             return false;
@@ -193,7 +193,7 @@ namespace quinte
 
         windows::WideStringToUTF8(deviceNameProp.pwszVal, deviceDesc.Name);
 
-        ComPtr<IAudioClient> pAudioClient;
+        Rc<IAudioClient> pAudioClient;
         const HRESULT hrClient = pDevice->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr, &pAudioClient);
         if (FAILED(hrClient))
             return false;
@@ -271,7 +271,7 @@ namespace quinte
             return audio::ResultCode::FailDeviceModeNotSupported;
 
         windows::WideString<BackendDeviceID::Cap> wideID{ id };
-        ComPtr<IMMDevice> pDevice;
+        Rc<IMMDevice> pDevice;
         if (!CheckHR(m_DeviceEnumerator->GetDevice(wideID.Data, &pDevice)))
             return audio::ResultCode::FailUnknown;
 
@@ -331,7 +331,7 @@ namespace quinte
 
     AudioBackendWASAPI::AudioBackendWASAPI()
     {
-        CheckHR(CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&m_DeviceEnumerator)));
+        CheckHR(CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL, QU_IID_PPV_ARGS(&m_DeviceEnumerator)));
     }
 
 
@@ -488,8 +488,8 @@ namespace quinte
         uint32_t captureFormatSampleRate = 0;
         memory::unique_temp_ptr<Resampler> pCaptureResampler = nullptr;
         AudioRingBuffer captureBuffer;
-        ComPtr<IAudioClient> captureAudioClient = m_CaptureHandle.AudioClient;
-        ComPtr<IAudioCaptureClient> captureClient = m_CaptureHandle.CaptureClient;
+        Rc<IAudioClient> captureAudioClient = m_CaptureHandle.AudioClient;
+        Rc<IAudioCaptureClient> captureClient = m_CaptureHandle.CaptureClient;
 
         if (captureAudioClient)
         {
@@ -511,7 +511,7 @@ namespace quinte
                 if (!CheckHR(InitializeAudioClient(captureAudioClient.Get(), captureFormat.Get())))
                     return;
 
-                if (!CheckHR(captureAudioClient->GetService(__uuidof(IAudioCaptureClient), &captureClient)))
+                if (!CheckHR(captureAudioClient->GetService(QU_IID_PPV_ARGS(&captureClient))))
                     return;
 
                 auto captureEvent = threading::Event::CreateAutoReset("WASAPI/CaptureEvent");
@@ -550,8 +550,8 @@ namespace quinte
         uint32_t renderFormatSampleRate = 0;
         memory::unique_temp_ptr<Resampler> pRenderResampler = nullptr;
         AudioRingBuffer renderBuffer;
-        ComPtr<IAudioClient> renderAudioClient = m_RenderHandle.AudioClient;
-        ComPtr<IAudioRenderClient> renderClient = m_RenderHandle.RenderClient;
+        Rc<IAudioClient> renderAudioClient = m_RenderHandle.AudioClient;
+        Rc<IAudioRenderClient> renderClient = m_RenderHandle.RenderClient;
 
         if (renderAudioClient)
         {
@@ -573,7 +573,7 @@ namespace quinte
                 if (!CheckHR(InitializeAudioClient(renderAudioClient.Get(), renderFormat.Get())))
                     return;
 
-                if (!CheckHR(renderAudioClient->GetService(__uuidof(IAudioRenderClient), &renderClient)))
+                if (!CheckHR(renderAudioClient->GetService(QU_IID_PPV_ARGS(&renderClient))))
                     return;
 
                 auto renderEvent = threading::Event::CreateAutoReset("WASAPI/RenderEvent");
@@ -829,8 +829,8 @@ namespace quinte
         CheckHR(
             CoCreateInstance(CLSID_CResamplerMediaObject, nullptr, CLSCTX_INPROC_SERVER, IID_IUnknown, (void**)&pTransformUnk));
 
-        CheckHR(pTransformUnk->QueryInterface(IID_PPV_ARGS(&pTransform)));
-        CheckHR(pTransformUnk->QueryInterface(IID_PPV_ARGS(&pResamplerProps)));
+        CheckHR(pTransformUnk->QueryInterface(QU_IID_PPV_ARGS(&pTransform)));
+        CheckHR(pTransformUnk->QueryInterface(QU_IID_PPV_ARGS(&pResamplerProps)));
         CheckHR(pResamplerProps->SetHalfFilterLength(60));
 
         const GUID audioFormatGuid = audio::IsFloatFormat(format) ? MFAudioFormat_Float : MFAudioFormat_PCM;
@@ -891,13 +891,13 @@ namespace quinte
             ? CeilDivide(inputBufferSize * OutSampleRate, InSampleRate)
             : bytesPerSample * ChannelCount * maxOutSampleCount;
 
-        ComPtr<IMFMediaBuffer> pInMediaBuffer;
+        Rc<IMFMediaBuffer> pInMediaBuffer;
         CheckHR(MFCreateMemoryBuffer(inputBufferSize, &pInMediaBuffer));
         CopyToMediaBuffer(pInMediaBuffer.Get(), pInBuffer, inputBufferSize);
 
         pInMediaBuffer->SetCurrentLength(inputBufferSize);
 
-        ComPtr<IMFSample> pInSample;
+        Rc<IMFSample> pInSample;
         CheckHR(MFCreateSample(&pInSample));
         pInSample->AddBuffer(pInMediaBuffer.Get());
 
@@ -914,7 +914,7 @@ namespace quinte
 
         CheckHR(MFCreateSample(&outDataBuffer.pSample));
 
-        ComPtr<IMFMediaBuffer> pOutMediaBuffer;
+        Rc<IMFMediaBuffer> pOutMediaBuffer;
         CheckHR(MFCreateMemoryBuffer(outputBufferSize, &pOutMediaBuffer));
         outDataBuffer.pSample->AddBuffer(pOutMediaBuffer.Get());
 

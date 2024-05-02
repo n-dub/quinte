@@ -3,9 +3,7 @@
 
 namespace quinte
 {
-    class BaseBuffer
-        : public NoCopy
-        , public memory::RefCountedObjectBase
+    class BaseBuffer : public memory::RefCountedObjectBase
     {
     protected:
         uint64_t m_Capacity : 48;

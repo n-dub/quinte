@@ -18,23 +18,36 @@ namespace quinte
         {
             friend class ::quinte::detail::RcBase;
 
+            RefCountedObjectBase(const RefCountedObjectBase&) = delete;
+            RefCountedObjectBase& operator=(const RefCountedObjectBase&) = delete;
+
+            RefCountedObjectBase(RefCountedObjectBase&&) = delete;
+            RefCountedObjectBase& operator=(RefCountedObjectBase&&) = delete;
+
             std::atomic<uint32_t> m_RefCount = 0;
             uint32_t m_AllocationSize = 0;
             std::pmr::memory_resource* m_pAllocator = nullptr;
 
         public:
+            RefCountedObjectBase() = default;
+            virtual ~RefCountedObjectBase() = default;
+
+            inline uint32_t GetRefCount() const
+            {
+                return m_RefCount.load(std::memory_order_relaxed);
+            }
+
             inline uint32_t AddRef()
             {
                 return ++m_RefCount;
             }
 
-            template<std::invocable F>
-            inline uint32_t Release(F&& destroyCallback)
+            inline uint32_t Release()
             {
                 const uint32_t refCount = --m_RefCount;
                 if (refCount == 0)
                 {
-                    destroyCallback();
+                    this->~RefCountedObjectBase();
                     m_pAllocator->deallocate(this, m_AllocationSize, memory::kDefaultAlignment);
                 }
 
@@ -46,30 +59,6 @@ namespace quinte
 
     namespace detail
     {
-        template<class T1, class = void>
-        struct IsComplete : std::false_type
-        {
-        };
-
-
-        template<class T1>
-        struct IsComplete<T1, decltype(void(sizeof(T1)))> : std::true_type
-        {
-        };
-
-
-        template<class TBase, class TDerived, bool>
-        struct IsBaseOf : std::true_type
-        {
-        };
-
-
-        template<class TBase, class TDerived>
-        struct IsBaseOf<TBase, TDerived, true> : std::is_base_of<TBase, TDerived>
-        {
-        };
-
-
         template<class T>
         class PtrRef final
         {
@@ -81,6 +70,11 @@ namespace quinte
             inline explicit PtrRef(T* ptr)
                 : m_Ptr(ptr)
             {
+            }
+
+            inline operator void**() const
+            {
+                return reinterpret_cast<void**>(m_Ptr->ReleaseAndGetAddressOf());
             }
 
             inline operator ValueType**()
@@ -98,8 +92,8 @@ namespace quinte
         class RcBase
         {
         protected:
-            inline void SetupRefCounter(memory::RefCountedObjectBase* pObject, std::pmr::memory_resource* pAllocator,
-                                        uint32_t allocationSize)
+            inline static void SetupRefCounter(memory::RefCountedObjectBase* pObject, std::pmr::memory_resource* pAllocator,
+                                               uint32_t allocationSize)
             {
                 pObject->m_AllocationSize = allocationSize;
                 pObject->m_pAllocator = pAllocator;
@@ -109,8 +103,14 @@ namespace quinte
 
 
     template<class T>
-    concept RefCountedObject = (alignof(T) <= memory::kDefaultAlignment)
-        && detail::IsBaseOf<memory::RefCountedObjectBase, T, detail::IsComplete<T>::value>::value;
+    concept RefCountedObject = (alignof(T) <= memory::kDefaultAlignment) && requires(T* t) {
+        {
+            t->AddRef()
+        } -> std::unsigned_integral;
+        {
+            t->Release()
+        } -> std::unsigned_integral;
+    };
 
 
     template<RefCountedObject T>
@@ -129,10 +129,7 @@ namespace quinte
             uint32_t result = 0;
             if (m_pObject)
             {
-                result = m_pObject->Release([m_pObject] {
-                    m_pObject->~T();
-                });
-
+                result = m_pObject->Release();
                 m_pObject = nullptr;
             }
 
@@ -140,6 +137,8 @@ namespace quinte
         }
 
     public:
+        using ValueType = T;
+
         inline Rc() = default;
 
         inline ~Rc()
@@ -147,8 +146,14 @@ namespace quinte
             InternalRelease();
         }
 
-        inline explicit Rc(T* pObject)
+        inline Rc(T* pObject)
             : m_pObject(pObject)
+        {
+            InternalAddRef();
+        }
+
+        inline Rc(const Rc& other)
+            : m_pObject(other.Get())
         {
             InternalAddRef();
         }
@@ -160,20 +165,41 @@ namespace quinte
             InternalAddRef();
         }
 
+        inline Rc(Rc&& other)
+            : m_pObject(other.Detach())
+        {
+        }
+
         template<std::derived_from<T> TOther>
         inline Rc(Rc<TOther>&& other)
             : m_pObject(other.Detach())
         {
         }
 
-        template<std::derived_from<T> TOther>
-        inline Rc& operator=(const Rc<TOther>& other)
+        inline Rc& operator=(const Rc& other)
         {
-            if (static_cast<RcBase*>(this) == static_cast<RcBase*>(&other))
-                return;
+            if (static_cast<detail::RcBase*>(this) == static_cast<const detail::RcBase*>(&other))
+                return *this;
 
             Attach(other.Get());
             InternalAddRef();
+            return *this;
+        }
+
+        template<std::derived_from<T> TOther>
+        inline Rc& operator=(const Rc<TOther>& other)
+        {
+            if (static_cast<detail::RcBase*>(this) == static_cast<const detail::RcBase*>(&other))
+                return *this;
+
+            Attach(other.Get());
+            InternalAddRef();
+            return *this;
+        }
+
+        inline Rc& operator=(Rc&& other)
+        {
+            Attach(other.Detach());
             return *this;
         }
 
@@ -263,20 +289,22 @@ namespace quinte
         }
 
         template<class... TArgs>
-        inline static Rc<T> New(std::pmr::memory_resource* pAllocator, TArgs&&... args)
+        requires std::constructible_from<T, TArgs...>
+        inline static T* New(std::pmr::memory_resource* pAllocator, TArgs&&... args)
         {
             T* ptr = new (pAllocator->allocate(sizeof(T), memory::kDefaultAlignment)) T(std::forward<TArgs>(args)...);
             SetupRefCounter(ptr, pAllocator, static_cast<uint32_t>(sizeof(T)));
-            return Rc<T>{ ptr };
+            return ptr;
         }
 
         template<class... TArgs>
-        inline static Rc<T> DefaultNew(TArgs&&... args)
+        requires std::constructible_from<T, TArgs...>
+        inline static T* DefaultNew(TArgs&&... args)
         {
             std::pmr::memory_resource* pAllocator = std::pmr::get_default_resource();
             T* ptr = new (pAllocator->allocate(sizeof(T), memory::kDefaultAlignment)) T(std::forward<TArgs>(args)...);
             SetupRefCounter(ptr, pAllocator, static_cast<uint32_t>(sizeof(T)));
-            return Rc<T>{ ptr };
+            return ptr;
         }
     };
 

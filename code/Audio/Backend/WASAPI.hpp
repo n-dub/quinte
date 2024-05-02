@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <Audio/Backend/BackendBase.hpp>
 #include <Core/String.hpp>
 #include <Core/Windows/Utils.hpp>
@@ -32,14 +32,14 @@ namespace quinte
             uint32_t InSampleRate;
             uint32_t OutSampleRate;
 
-            ComPtr<IUnknown> pTransformUnk;
-            ComPtr<IMFTransform> pTransform;
+            Rc<IUnknown> pTransformUnk;
+            Rc<IMFTransform> pTransform;
 
-            ComPtr<IMFMediaType> pMediaType;
-            ComPtr<IMFMediaType> pInMediaType;
-            ComPtr<IMFMediaType> pOutMediaType;
+            Rc<IMFMediaType> pMediaType;
+            Rc<IMFMediaType> pInMediaType;
+            Rc<IMFMediaType> pOutMediaType;
 
-            ComPtr<IWMResamplerProps> pResamplerProps;
+            Rc<IWMResamplerProps> pResamplerProps;
 
             Resampler(audio::Format format, uint32_t channelCount, uint32_t inSampleRate, uint32_t outSampleRate);
             ~Resampler();
@@ -57,23 +57,23 @@ namespace quinte
 
         struct ClientHandle
         {
-            ComPtr<IAudioClient> AudioClient;
+            Rc<IAudioClient> AudioClient;
             threading::Event Event;
         };
 
         struct : ClientHandle
         {
-            ComPtr<IAudioCaptureClient> CaptureClient;
+            Rc<IAudioCaptureClient> CaptureClient;
         } m_CaptureHandle;
 
         struct : ClientHandle
         {
-            ComPtr<IAudioRenderClient> RenderClient;
+            Rc<IAudioRenderClient> RenderClient;
         } m_RenderHandle;
 
         windows::CoInitializeScope m_CoInitScope;
 
-        ComPtr<IMMDeviceEnumerator> m_DeviceEnumerator;
+        Rc<IMMDeviceEnumerator> m_DeviceEnumerator;
         std::pmr::vector<DeviceDataFlowInfo> m_BackendDevices;
 
         audio::ResultCode EnumerateDevicesImpl(EDataFlow dataFlow);

@@ -3,6 +3,7 @@
     main.cpp
 
     FixedString.cpp
+    RefCounter.cpp
     String.cpp
 )
 

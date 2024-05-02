@@ -32,7 +32,7 @@ namespace quinte
             : m_Zero(0)
         {
             QU_Assert(length <= TCapacity);
-            memory::Set(m_Data, value, length);
+            memset(m_Data, value, length);
             m_Size = static_cast<uint32_t>(length);
             m_Data[m_Size] = 0;
         }
