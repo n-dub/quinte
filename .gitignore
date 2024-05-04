@@ -18,4 +18,5 @@ cmake-build/
 out/
 
 .vs/
+.vscode/
 .idea/

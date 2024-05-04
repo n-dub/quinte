@@ -1,5 +1,6 @@
 ﻿#include <Core/Threading.hpp>
 #include <Core/Windows/Utils.hpp>
+#include <Core/MemoryPool.hpp>
 
 namespace quinte::threading
 {
@@ -13,6 +14,16 @@ namespace quinte::threading
             ThreadFunction StartRoutine;
         };
 
+        MemoryPool g_ThreadDataPool{ sizeof(ThreadDataImpl), 64 };
+        SpinLock g_ThreadDataLock;
+
+
+        inline ThreadDataImpl* AllocateThreadData()
+        {
+            const std::lock_guard lock{ g_ThreadDataLock };
+            return memory::New<ThreadDataImpl>(&g_ThreadDataPool);
+        }
+
 
         struct ThreadDataHolder final
         {
@@ -21,7 +32,10 @@ namespace quinte::threading
             ~ThreadDataHolder()
             {
                 if (pData)
-                    memory::DefaultDelete(pData);
+                {
+                    const std::lock_guard lock{ g_ThreadDataLock };
+                    memory::Delete(&g_ThreadDataPool, pData, 0);
+                }
             }
         };
 
@@ -73,7 +87,7 @@ namespace quinte::threading
 
     ThreadHandle CreateThread(StringSlice name, ThreadFunction startRoutine, void* pUserData, Priority priority, size_t stackSize)
     {
-        auto* pData = memory::DefaultNew<ThreadDataImpl>();
+        ThreadDataImpl* pData = AllocateThreadData();
 
         const HANDLE hThread = ::CreateThread(nullptr, stackSize, &ThreadRoutineImpl, pData, CREATE_SUSPENDED, &pData->ID);
         QU_Assert(hThread);
@@ -82,7 +96,7 @@ namespace quinte::threading
         pData->pUserData = pUserData;
         pData->StartRoutine = startRoutine;
 
-        windows::WideStr wideDesc{ name };
+        windows::WideString<64> wideDesc{ name };
         const HRESULT hrDesc = SetThreadDescription(hThread, wideDesc.Data);
         windows::CheckHR(hrDesc);
 
