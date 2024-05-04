@@ -11,24 +11,6 @@ namespace quinte::memory
     inline constexpr size_t kCacheLineSize = 64;
 
 
-    inline constexpr size_t operator""_KB(size_t bytes)
-    {
-        return bytes * 1024;
-    }
-
-
-    inline constexpr size_t operator""_MB(size_t bytes)
-    {
-        return bytes * 1024 * 1024;
-    }
-
-
-    inline constexpr size_t operator""_GB(size_t bytes)
-    {
-        return bytes * 1024 * 1024 * 1024;
-    }
-
-
     namespace detail
     {
         template<class T>
@@ -39,10 +21,10 @@ namespace quinte::memory
     namespace platform
     {
         //! \brief The size of virtual memory page.
-        inline static constexpr size_t kVirtualPageSize = 4_KB;
+        inline static constexpr size_t kVirtualPageSize = 4 * 1024;
 
         //! \brief The virtual allocation granularity.
-        inline static constexpr size_t kVirtualAllocationGranularity = 64_KB;
+        inline static constexpr size_t kVirtualAllocationGranularity = 64 * 1024;
 
 
         //! \brief Call platform-specific function to allocate virtual memory directly from the OS.
@@ -52,6 +34,38 @@ namespace quinte::memory
         //! \brief Deallocate memory allocated via memory::platform::Allocate().
         void Deallocate(void* pointer, size_t byteSize);
     } // namespace platform
+
+
+    //! \brief An allocate that allocates virtual memory directly from the OS.
+    class VirtualMemoryResource final : public std::pmr::memory_resource
+    {
+        static VirtualMemoryResource s_Instance;
+
+    public:
+        inline void* do_allocate(size_t byteSize, size_t) override
+        {
+            return platform::Allocate(byteSize);
+        }
+
+
+        inline void do_deallocate(void* p, size_t byteSize, size_t) override
+        {
+            platform::Deallocate(p, byteSize);
+        }
+
+
+        inline bool do_is_equal(const memory_resource&) const noexcept override
+        {
+            return false;
+        }
+
+        inline static VirtualMemoryResource* Get()
+        {
+            return &s_Instance;
+        }
+    };
+
+    inline VirtualMemoryResource VirtualMemoryResource::s_Instance;
 
 
     //! \brief Set byteCount bytes of memory at pDestination to zero.
@@ -133,6 +147,14 @@ namespace quinte::memory
     }
 
 
+    //! \brief Just a helper to allocate memory using std::pmr::memory_resource and cast to T*
+    template<class T>
+    inline T* Alloc(std::pmr::memory_resource* pAllocator, size_t byteSize, size_t byteAlignment = kDefaultAlignment)
+    {
+        return static_cast<T*>(pAllocator->allocate(byteSize, byteAlignment));
+    }
+
+
     //! \brief Free memory allocated by DefaultAlloc<T> and set the pointer to null.
     //!
     //! This is a low-level function, it doesn't call destructors.
@@ -143,6 +165,18 @@ namespace quinte::memory
         if (ptr)
         {
             detail::DefaultFree(ptr);
+            ptr = nullptr;
+        }
+    }
+
+
+    template<class T>
+    inline void SafeFree(std::pmr::memory_resource* pAllocator, T*& ptr, size_t byteSize = 0,
+                         size_t byteAlignment = kDefaultAlignment)
+    {
+        if (ptr)
+        {
+            pAllocator->deallocate(ptr, byteSize, byteAlignment);
             ptr = nullptr;
         }
     }
@@ -364,5 +398,4 @@ namespace quinte::memory
     {
         return unique_ptr<T>(DefaultNew<T>(std::forward<TArgs>(args)...));
     }
-
 } // namespace quinte::memory

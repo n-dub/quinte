@@ -3,7 +3,11 @@
 
 using namespace quinte;
 
-struct DummyObject final : memory::RefCountedObjectBase
+struct IDummy : memory::RefCountedObjectBase
+{
+};
+
+struct DummyObject final : IDummy
 {
     int32_t* m_pCount = nullptr;
 
@@ -155,6 +159,52 @@ TEST(RefCounter, ReleaseAndGetAddressOf)
         *ppResetPtr = Rc<DummyObject>::DefaultNew(&cnt);
         (*ppResetPtr)->AddRef();
         EXPECT_EQ(cnt, 1);
+    }
+
+    EXPECT_EQ(cnt, 0);
+}
+
+TEST(RefCounter, CopyConstructorDerived)
+{
+    int32_t cnt = 0;
+
+    {
+        const Rc<DummyObject> ptr = Rc<DummyObject>::DefaultNew(&cnt);
+        EXPECT_EQ(cnt, 1);
+        EXPECT_EQ(ptr->GetRefCount(), 1);
+
+        {
+            const Rc<IDummy> other = ptr;
+            EXPECT_EQ(cnt, 1);
+            EXPECT_EQ(ptr.Get(), other.Get());
+            EXPECT_EQ(ptr, other);
+            EXPECT_EQ(other->GetRefCount(), 2);
+            EXPECT_EQ(ptr->GetRefCount(), 2);
+        }
+
+        EXPECT_EQ(cnt, 1);
+        EXPECT_EQ(ptr->GetRefCount(), 1);
+    }
+
+    EXPECT_EQ(cnt, 0);
+}
+
+TEST(RefCounter, MoveConstructorDerived)
+{
+    int32_t cnt = 0;
+
+    {
+        Rc<DummyObject> ptr = Rc<DummyObject>::DefaultNew(&cnt);
+        EXPECT_EQ(cnt, 1);
+        EXPECT_EQ(ptr->GetRefCount(), 1);
+
+        {
+            const Rc<IDummy> other = std::move(ptr);
+            EXPECT_EQ(cnt, 1);
+            EXPECT_EQ(other->GetRefCount(), 1);
+        }
+
+        EXPECT_EQ(cnt, 0);
     }
 
     EXPECT_EQ(cnt, 0);

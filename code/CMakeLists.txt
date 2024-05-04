@@ -11,11 +11,22 @@
     Audio/Backend/RingBuffer.hpp
     Audio/Backend/WASAPI.hpp
     Audio/Backend/WASAPI.cpp
-    Audio/Buffers/Buffer.hpp
     Audio/Buffers/AudioBuffer.hpp
     Audio/Buffers/AudioBuffer.cpp
+    Audio/Buffers/AudioBufferCommon.hpp
+    Audio/Buffers/AudioBufferView.hpp
+    Audio/Buffers/AudioBufferView.cpp
+    Audio/Buffers/Buffer.hpp
+    Audio/Buffers/BufferView.hpp
+    Audio/Ports/AudioPort.hpp
+    Audio/Ports/Port.hpp
+    Audio/Ports/PortManager.hpp
+    Audio/Ports/PortManager.cpp
+    Audio/Base.hpp
     Audio/Engine.hpp
     Audio/Engine.cpp
+    Audio/Session.hpp
+    Audio/Session.cpp
 
     Core/Base.hpp
     Core/Core.hpp
@@ -25,6 +36,8 @@
     Core/FixedVector.hpp
     Core/Memory.hpp
     Core/Memory.cpp
+    Core/MemoryPool.hpp
+    Core/MemoryPool.cpp
     Core/RefCount.hpp
     Core/String.hpp
     Core/StringBase.hpp

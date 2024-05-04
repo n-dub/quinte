@@ -1,4 +1,4 @@
-#include <Audio/Backend/BackendBase.hpp>
+﻿#include <Audio/Backend/BackendBase.hpp>
 
 namespace quinte
 {
@@ -201,6 +201,12 @@ namespace quinte
                           pInBuffer,
                           m_StreamData.BufferFrameCount,
                           info);
+    }
+
+
+    size_t AudioBackendBase::GetAudioBufferSize() const
+    {
+        return m_StreamData.BufferFrameCount;
     }
 
 

@@ -5,8 +5,8 @@
 
 namespace quinte
 {
-    static audio::CallbackResult AudioCallbackDist(void* pOutputBuffer, void* pInputBuffer, uint32_t frameCount,
-                                                   double streamTime, audio::StreamStatus status, void*)
+    [[maybe_unused]] static audio::CallbackResult AudioCallbackDist(void* pOutputBuffer, void* pInputBuffer, uint32_t frameCount,
+                                                                    double streamTime, audio::StreamStatus status, void*)
     {
         QU_Unused(streamTime);
         QU_Unused(status);
@@ -39,7 +39,8 @@ namespace quinte
     Application::Application()
         : VulkanApplication("Quinte")
     {
-        m_Engine.InitializeAPI(audio::APIKind::WASAPI);
+        Session::LoadEmpty();
+        Session::Get()->GetAudioEngine()->InitializeAPI(audio::APIKind::WASAPI);
     }
 
 
@@ -73,7 +74,7 @@ namespace quinte
             TextUnformatted("Test " NF_FA_ARROW_RIGHT " " NF_COD_ACCOUNT " " NF_FA_MEMORY);
             TextUnformatted("API Kind: WASAPI");
 
-            IAudioAPI* pAPI = m_Engine.GetAPI();
+            const IAudioAPI* pAPI = Session::Get()->GetAudioEngine()->GetAPI();
             const auto& devices = pAPI->GetDevices();
 
             const audio::DeviceDesc* pSelectedInDevice =
@@ -147,29 +148,16 @@ namespace quinte
             {
                 if (pAPI->GetState() != audio::StreamState::Running)
                 {
-                    audio::StreamDesc outputDesc{};
-                    outputDesc.DeviceID = devices[m_SelectedOutputDeviceIndex].ID;
-                    outputDesc.ChannelCount = 2;
-
-                    audio::StreamDesc inputDesc{};
-                    inputDesc.DeviceID = devices[m_SelectedInputDeviceIndex].ID;
-                    inputDesc.ChannelCount = 2;
-
-                    audio::StreamOpenInfo openInfo{};
-                    openInfo.pOutputDesc = &outputDesc;
-                    openInfo.pInputDesc = &inputDesc;
-                    openInfo.Format = audio::Format::Float32;
-                    openInfo.BufferFrameCount = 512;
-                    openInfo.Callback = &AudioCallbackDist;
-
-                    const audio::ResultCode openResult = pAPI->OpenStream(openInfo);
-                    QU_Assert(openResult == audio::ResultCode::Success);
-                    const audio::ResultCode startResult = pAPI->StartStream();
-                    QU_Assert(startResult == audio::ResultCode::Success);
+                    const audio::EngineStartInfo startInfo{
+                        .InputDevice = pSelectedInDevice->ID,
+                        .OutputDevice = pSelectedOutDevice->ID,
+                        .BufferSize = 512,
+                    };
+                    Session::Get()->GetAudioEngine()->Start(startInfo);
                 }
                 else
                 {
-                    pAPI->CloseStream();
+                    Session::Get()->GetAudioEngine()->Stop();
                 }
             }
 

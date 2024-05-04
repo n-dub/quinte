@@ -1,30 +1,26 @@
 ﻿#pragma once
-#include <Audio/Buffers/BufferView.hpp>
+#include <Audio/Base.hpp>
 
 namespace quinte
 {
-    class BaseBuffer : public memory::RefCountedObjectBase
+    class BaseBufferView
     {
     protected:
         uint64_t m_Capacity : 48;
         uint64_t m_DataType : 2;
         uint64_t m_Silent : 1;
-        uint64_t m_Owning : 1;
         uint64_t m_Written : 1;
 
-        inline BaseBuffer(audio::DataType dataType, uint64_t capacity, bool owning)
-            : m_Capacity(capacity)
+        inline BaseBufferView(audio::DataType dataType)
+            : m_Capacity(0)
             , m_DataType(enum_cast(dataType))
             , m_Silent(true)
-            , m_Owning(owning)
             , m_Written(false)
         {
         }
 
     public:
-        inline static constexpr size_t kDataAlignment = BaseBufferView::kDataAlignment;
-
-        virtual ~BaseBuffer() = default;
+        inline static constexpr size_t kDataAlignment = memory::kCacheLineSize;
 
         //! \brief Get buffer's maximum capacity.
         //!
@@ -46,9 +42,6 @@ namespace quinte
             return m_Written;
         }
 
-        //! \brief Reallocate the internal storage if the current capacity is not sufficient.
-        virtual void Resize(uint64_t size) = 0;
-
         //! \brief Clear buffer data in the range [offset, offset + length)
         virtual void Clear(uint64_t offset, uint64_t length) = 0;
 
@@ -63,7 +56,7 @@ namespace quinte
         //! \param srcOffset - Offset in the source buffer to read from.
         //! \param destOffset - Offset in this buffer.
         //! \param length - The length of the data to be written.
-        virtual void Read(const BaseBuffer* pSourceBuffer, uint64_t srcOffset, uint64_t destOffset, uint64_t length) = 0;
+        virtual void Read(const BaseBufferView* pSourceBuffer, uint64_t srcOffset, uint64_t destOffset, uint64_t length) = 0;
 
         //! \brief Mix (add) buffer's data with the contents of another buffer.
         //!
@@ -73,6 +66,6 @@ namespace quinte
         //! \param srcOffset - Offset in the source buffer to read from.
         //! \param destOffset - Offset in this buffer.
         //! \param length - The length of the data to be written.
-        virtual void Mix(const BaseBuffer* pSourceBuffer, uint64_t srcOffset, uint64_t destOffset, uint64_t length) = 0;
+        virtual void Mix(const BaseBufferView* pSourceBuffer, uint64_t srcOffset, uint64_t destOffset, uint64_t length) = 0;
     };
 } // namespace quinte

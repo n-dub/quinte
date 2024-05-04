@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <Core/Core.hpp>
 
 namespace quinte::memory
@@ -19,7 +19,7 @@ namespace quinte::memory
             size_t m_Offset = sizeof(Page);
         };
 
-        inline static constexpr size_t kPageByteSize = 16_MB;
+        inline static constexpr size_t kPageByteSize = 1024 * 1024;
 
     private:
         Page* m_pFirstPage = nullptr;

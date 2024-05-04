@@ -319,7 +319,7 @@ namespace quinte
     template<RefCountedObject T>
     inline bool operator!=(const Rc<T>& lhs, std::nullptr_t)
     {
-        return !(lhs == nullptr);
+        return lhs.Get() != nullptr;
     }
 
 
@@ -333,7 +333,7 @@ namespace quinte
     template<RefCountedObject T>
     inline bool operator!=(std::nullptr_t, const Rc<T>& rhs)
     {
-        return !(nullptr == rhs);
+        return rhs.Get() != nullptr;
     }
 
 
@@ -341,7 +341,7 @@ namespace quinte
     requires std::derived_from<T1, T2> || std::derived_from<T2, T1>
     inline bool operator==(const Rc<T1>& lhs, T2* rhs)
     {
-        return static_cast<memory::RefCountedObjectBase*>(lhs.Get()) == static_cast<memory::RefCountedObjectBase*>(rhs);
+        return lhs.Get() == rhs;
     }
 
 
@@ -349,7 +349,7 @@ namespace quinte
     requires std::derived_from<T1, T2> || std::derived_from<T2, T1>
     inline bool operator!=(const Rc<T1>& lhs, T2* rhs)
     {
-        return !(lhs == rhs);
+        return lhs.Get() != rhs;
     }
 
 
@@ -357,7 +357,7 @@ namespace quinte
     requires std::derived_from<T1, T2> || std::derived_from<T2, T1>
     inline bool operator==(T1* lhs, const Rc<T2>& rhs)
     {
-        return rhs == lhs;
+        return rhs == lhs.Get();
     }
 
 
@@ -365,7 +365,7 @@ namespace quinte
     requires std::derived_from<T1, T2> || std::derived_from<T2, T1>
     inline bool operator!=(T1* lhs, const Rc<T2>& rhs)
     {
-        return !(lhs == rhs);
+        return lhs != rhs.Get();
     }
 
 
@@ -381,6 +381,6 @@ namespace quinte
     requires std::derived_from<T1, T2> || std::derived_from<T2, T1>
     inline bool operator!=(const Rc<T1>& lhs, const Rc<T2>& rhs)
     {
-        return !(lhs == rhs);
+        return lhs.Get() != rhs.Get();
     }
 } // namespace quinte

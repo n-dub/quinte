@@ -1,43 +1,33 @@
 ﻿#include <Audio/Buffers/AudioBuffer.hpp>
 #include <Audio/Buffers/AudioBufferCommon.hpp>
+#include <Audio/Buffers/AudioBufferView.hpp>
 
 namespace quinte
 {
-    AudioBuffer::AudioBuffer(uint64_t size)
-        : BaseBuffer(audio::DataType::Audio, size, false)
+    AudioBufferView::AudioBufferView(float* pData, uint64_t size)
+        : BaseBufferView(audio::DataType::Audio)
     {
         if (size > 0)
         {
-            Resize(size);
+            m_pData = pData;
+            m_Capacity = size;
             Clear();
-            m_Owning = true;
             m_Silent = false;
         }
     }
 
 
-    AudioBuffer::~AudioBuffer()
+    AudioBufferView::AudioBufferView(AudioBuffer* pAudioBuffer)
+        : BaseBufferView(audio::DataType::Audio)
     {
-        if (m_Owning && m_pData)
-            memory::DefaultFree(m_pData);
-        m_pData = nullptr;
+        m_Capacity = pAudioBuffer->GetCapacity();
+        m_Silent = pAudioBuffer->IsSilent();
+        m_Written = pAudioBuffer->IsWritten();
+        m_pData = pAudioBuffer->Data();
     }
 
 
-    void AudioBuffer::Resize(uint64_t size)
-    {
-        QU_AssertDebug(m_Owning);
-        if (m_pData && m_Capacity >= size)
-            return;
-
-        memory::DefaultFree(m_pData);
-        m_pData = memory::DefaultAlloc<float>(size * sizeof(float), kDataAlignment);
-        m_Capacity = size;
-        m_Silent = false;
-    }
-
-
-    void AudioBuffer::Clear(uint64_t offset, uint64_t length)
+    void AudioBufferView::Clear(uint64_t offset, uint64_t length)
     {
         if (!m_Silent)
         {
@@ -51,19 +41,19 @@ namespace quinte
     }
 
 
-    void AudioBuffer::Clear()
+    void AudioBufferView::Clear()
     {
         Clear(0, m_Capacity);
     }
 
 
-    void AudioBuffer::Read(const BaseBuffer* pSourceBuffer, uint64_t srcOffset, uint64_t destOffset, uint64_t length)
+    void AudioBufferView::Read(const BaseBufferView* pSourceBuffer, uint64_t srcOffset, uint64_t destOffset, uint64_t length)
     {
         QU_Assert(this != pSourceBuffer);
         QU_Assert(destOffset + length <= m_Capacity);
         QU_Assert(srcOffset + length <= pSourceBuffer->GetCapacity());
 
-        const float* pSource = static_cast<const AudioBuffer*>(pSourceBuffer)->m_pData;
+        const float* pSource = static_cast<const AudioBufferView*>(pSourceBuffer)->m_pData;
         float* pDestination = m_pData;
 
         if (pSourceBuffer->IsSilent())
@@ -81,7 +71,7 @@ namespace quinte
     }
 
 
-    void AudioBuffer::Read(const float* pSource, uint64_t destOffset, uint64_t length)
+    void AudioBufferView::Read(const float* pSource, uint64_t destOffset, uint64_t length)
     {
         QU_Assert(pSource && length > 0);
         QU_Assert(m_Capacity >= destOffset + length);
@@ -92,7 +82,7 @@ namespace quinte
     }
 
 
-    void AudioBuffer::Mix(const BaseBuffer* pSourceBuffer, uint64_t srcOffset, uint64_t destOffset, uint64_t length)
+    void AudioBufferView::Mix(const BaseBufferView* pSourceBuffer, uint64_t srcOffset, uint64_t destOffset, uint64_t length)
     {
         QU_Assert(this != pSourceBuffer);
         QU_Assert(destOffset + length <= m_Capacity);
@@ -101,7 +91,7 @@ namespace quinte
         if (pSourceBuffer->IsSilent())
             return;
 
-        const float* pSource = static_cast<const AudioBuffer*>(pSourceBuffer)->m_pData;
+        const float* pSource = static_cast<const AudioBufferView*>(pSourceBuffer)->m_pData;
         float* pDestination = m_pData;
 
         detail::MixBuffersImpl(pDestination + destOffset, pSource + srcOffset, length);
@@ -110,7 +100,7 @@ namespace quinte
     }
 
 
-    void AudioBuffer::Mix(const float* pSource, uint64_t destOffset, uint64_t length)
+    void AudioBufferView::Mix(const float* pSource, uint64_t destOffset, uint64_t length)
     {
         QU_Assert(pSource && length > 0);
         QU_Assert(m_Capacity >= destOffset + length);
@@ -121,8 +111,8 @@ namespace quinte
     }
 
 
-    void AudioBuffer::MixWithGain(const BaseBuffer* pSourceBuffer, float gain, uint64_t srcOffset, uint64_t destOffset,
-                                  uint64_t length)
+    void AudioBufferView::MixWithGain(const BaseBufferView* pSourceBuffer, float gain, uint64_t srcOffset, uint64_t destOffset,
+                                      uint64_t length)
     {
         QU_Assert(this != pSourceBuffer);
         QU_Assert(destOffset + length <= m_Capacity);
@@ -131,7 +121,7 @@ namespace quinte
         if (pSourceBuffer->IsSilent() || gain == 0.0f)
             return;
 
-        const float* pSource = static_cast<const AudioBuffer*>(pSourceBuffer)->m_pData;
+        const float* pSource = static_cast<const AudioBufferView*>(pSourceBuffer)->m_pData;
         float* pDestination = m_pData;
 
         detail::MixBuffersImpl(pDestination + destOffset, pSource + srcOffset, gain, length);
@@ -140,7 +130,7 @@ namespace quinte
     }
 
 
-    void AudioBuffer::MixWithGain(const float* pSource, float gain, uint64_t destOffset, uint64_t length)
+    void AudioBufferView::MixWithGain(const float* pSource, float gain, uint64_t destOffset, uint64_t length)
     {
         QU_Assert(pSource && length > 0);
         QU_Assert(m_Capacity >= destOffset + length);
@@ -154,7 +144,7 @@ namespace quinte
     }
 
 
-    void AudioBuffer::ApplyGain(float gain, uint64_t offset, uint64_t length)
+    void AudioBufferView::ApplyGain(float gain, uint64_t offset, uint64_t length)
     {
         if (gain == 0.0f)
         {

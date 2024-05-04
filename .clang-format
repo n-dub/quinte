@@ -1,4 +1,4 @@
-Language: Cpp
+﻿Language: Cpp
 
 AccessModifierOffset: -4
 AlignAfterOpenBracket: Align
@@ -65,7 +65,7 @@ PenaltyReturnTypeOnItsOwnLine: 99999
 PointerAlignment: Left
 ReflowComments: false
 RequiresClausePosition: OwnLine
-SortIncludes: CaseSensitive
+SortIncludes: false
 SortUsingDeclarations: true
 SpaceAfterCStyleCast: false
 SpaceAfterLogicalNot: false

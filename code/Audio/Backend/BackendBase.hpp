@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <Audio/Engine.hpp>
 #include <Core/FixedVector.hpp>
 #include <Core/Threading.hpp>
@@ -119,6 +119,7 @@ namespace quinte
             return m_LastResult.load(std::memory_order_acquire);
         }
 
+        size_t GetAudioBufferSize() const override;
         audio::ResultCode OpenStream(audio::StreamOpenInfo& openInfo) override;
         std::span<const audio::DeviceDesc> GetDevices() const override;
         audio::StreamState GetState() const override;
