@@ -2,10 +2,30 @@
 #include <Core/Windows/Utils.hpp>
 #include <Core/MemoryPool.hpp>
 
+#ifdef CreateMutex
+#    undef CreateMutex
+#endif
+
 namespace quinte::threading
 {
     namespace
     {
+        MemoryPool g_CriticalSectionPool{ sizeof(CRITICAL_SECTION), 256 };
+        SpinLock g_CriticalSectionPoolLock;
+
+        inline CRITICAL_SECTION* AllocateCriticalSection()
+        {
+            const std::lock_guard lock{ g_CriticalSectionPoolLock };
+            return memory::Alloc<CRITICAL_SECTION>(&g_CriticalSectionPool, sizeof(CRITICAL_SECTION));
+        }
+
+        inline void FreeCriticalSection(CRITICAL_SECTION* pCriticalSection)
+        {
+            const std::lock_guard lock{ g_CriticalSectionPoolLock };
+            g_CriticalSectionPool.deallocate(pCriticalSection, 0);
+        }
+
+
         struct ThreadDataImpl final
         {
             DWORD ID;
@@ -15,12 +35,12 @@ namespace quinte::threading
         };
 
         MemoryPool g_ThreadDataPool{ sizeof(ThreadDataImpl), 64 };
-        SpinLock g_ThreadDataLock;
+        SpinLock g_ThreadDataPoolLock;
 
 
         inline ThreadDataImpl* AllocateThreadData()
         {
-            const std::lock_guard lock{ g_ThreadDataLock };
+            const std::lock_guard lock{ g_ThreadDataPoolLock };
             return memory::New<ThreadDataImpl>(&g_ThreadDataPool);
         }
 
@@ -33,7 +53,7 @@ namespace quinte::threading
             {
                 if (pData)
                 {
-                    const std::lock_guard lock{ g_ThreadDataLock };
+                    const std::lock_guard lock{ g_ThreadDataPoolLock };
                     memory::Delete(&g_ThreadDataPool, pData, 0);
                 }
             }
@@ -50,6 +70,44 @@ namespace quinte::threading
             return 0;
         }
     } // namespace
+
+
+    MutexHandle CreateMutex(uint32_t spinCount)
+    {
+        CRITICAL_SECTION* pCriticalSection = AllocateCriticalSection();
+        InitializeCriticalSectionEx(pCriticalSection, spinCount, 0);
+        return MutexHandle{ reinterpret_cast<uint64_t>(pCriticalSection) };
+    }
+
+
+    void LockMutex(MutexHandle mutex)
+    {
+        CRITICAL_SECTION* pCriticalSection = reinterpret_cast<CRITICAL_SECTION*>(mutex.Value);
+        EnterCriticalSection(pCriticalSection);
+    }
+
+
+    bool TryLockMutex(MutexHandle mutex)
+    {
+        CRITICAL_SECTION* pCriticalSection = reinterpret_cast<CRITICAL_SECTION*>(mutex.Value);
+        return TryEnterCriticalSection(pCriticalSection);
+    }
+
+
+    void UnlockMutex(MutexHandle mutex)
+    {
+        CRITICAL_SECTION* pCriticalSection = reinterpret_cast<CRITICAL_SECTION*>(mutex.Value);
+        LeaveCriticalSection(pCriticalSection);
+    }
+
+
+    void CloseMutex(MutexHandle& mutex)
+    {
+        CRITICAL_SECTION* pCriticalSection = reinterpret_cast<CRITICAL_SECTION*>(mutex.Value);
+        DeleteCriticalSection(pCriticalSection);
+        FreeCriticalSection(pCriticalSection);
+        mutex = {};
+    }
 
 
     EventHandle CreateAutoResetEvent(StringSlice name, bool initialState)

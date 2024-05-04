@@ -42,6 +42,13 @@ namespace quinte
     }
 
 
+    void Session::Unload()
+    {
+        memory::DefaultDelete(g_CurrentSession);
+        g_CurrentSession = nullptr;
+    }
+
+
     Session* Session::Get()
     {
         return g_CurrentSession;

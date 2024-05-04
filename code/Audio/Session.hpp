@@ -22,6 +22,8 @@ namespace quinte
         PortManager* GetPortManager() const;
 
         static Session* LoadEmpty();
+        static void Unload();
+
         static Session* Get();
     };
 } // namespace quinte

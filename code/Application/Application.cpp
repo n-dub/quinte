@@ -44,6 +44,12 @@ namespace quinte
     }
 
 
+    Application::~Application()
+    {
+        Session::Unload();
+    }
+
+
     void Application::DrawUI()
     {
         using namespace ImGui;

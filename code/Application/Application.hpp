@@ -12,6 +12,7 @@ namespace quinte
 
     public:
         Application();
+        ~Application() override;
 
         void DrawUI() override;
     };

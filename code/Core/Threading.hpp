@@ -2,6 +2,10 @@
 #include <Core/Core.hpp>
 #include <Core/StringSlice.hpp>
 
+#ifdef CreateMutex
+#    undef CreateMutex
+#endif
+
 namespace quinte::threading
 {
     class SpinLock final
@@ -40,6 +44,69 @@ namespace quinte::threading
         inline void unlock() noexcept
         {
             m_Locked.store(false, std::memory_order_release);
+        }
+    };
+
+
+    struct MutexHandle final : TypedHandle<MutexHandle, uint64_t, 0>
+    {
+    };
+
+
+    MutexHandle CreateMutex(uint32_t spinCount = 500);
+    void LockMutex(MutexHandle mutex);
+    bool TryLockMutex(MutexHandle mutex);
+    void UnlockMutex(MutexHandle mutex);
+    void CloseMutex(MutexHandle& mutex);
+
+
+    class Mutex final : public NoCopy
+    {
+        MutexHandle m_Handle;
+
+    public:
+        inline Mutex()
+        {
+            m_Handle = CreateMutex();
+        }
+
+        inline Mutex(uint32_t spinCount)
+        {
+            m_Handle = CreateMutex(spinCount);
+        }
+
+        inline Mutex(Mutex&& other) noexcept
+            : m_Handle(other.m_Handle)
+        {
+            other.m_Handle.Reset();
+        }
+
+        inline Mutex& operator=(Mutex&& other) noexcept
+        {
+            CloseMutex(m_Handle);
+            m_Handle = other.m_Handle;
+            other.m_Handle.Reset();
+            return *this;
+        }
+
+        inline ~Mutex()
+        {
+            CloseMutex(m_Handle);
+        }
+
+        inline void lock()
+        {
+            LockMutex(m_Handle);
+        }
+
+        inline bool try_lock()
+        {
+            return TryLockMutex(m_Handle);
+        }
+
+        inline void unlock()
+        {
+            UnlockMutex(m_Handle);
         }
     };
 
