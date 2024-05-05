@@ -4,14 +4,30 @@
 
 namespace quinte
 {
-#if __INTELLISENSE__
-    // for some reason intellisense can't handle this
+    namespace detail
+    {
+        template<typename T>
+        struct tiny_allocator : std::allocator<T>
+        {
+            using size_type = uint32_t;
+            using std::allocator<T>::allocator;
+        };
+    } // namespace detail
 
-    template<class T, size_t TCapacity = gch::default_buffer_size_v<std::allocator<T>>>
-    using SmallVector = gch::small_vector<T, TCapacity>;
+#if __INTELLISENSE__
+    // for some reason intellisense can't handle the main version with memory::StdDefaultAllocator<T, uint32_t>
+
+    template<class T, size_t TCapacity = gch::default_buffer_size_v<detail::tiny_allocator<T>>>
+    using SmallVector = gch::small_vector<T, TCapacity, detail::tiny_allocator<T>>;
 #else
     template<class T, size_t TCapacity = gch::default_buffer_size_v<memory::StdDefaultAllocator<T, uint32_t>>>
     using SmallVector = gch::small_vector<T, TCapacity, memory::StdDefaultAllocator<T, uint32_t>>;
+
+    static_assert(sizeof(gch::small_vector<int, gch::default_buffer_size_v<memory::StdDefaultAllocator<int, uint32_t>>,
+                                           memory::StdDefaultAllocator<int, uint32_t>>)
+                      == sizeof(gch::small_vector<int, gch::default_buffer_size_v<detail::tiny_allocator<int>>,
+                                                  detail::tiny_allocator<int>>),
+                  "Intellisense doesn't report the correct size for small_vector");
 #endif
 
 
