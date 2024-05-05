@@ -1,35 +1,32 @@
 ﻿#include <Core/Interface.hpp>
-#include <Core/Threading.hpp>
-#include <unordered_map>
+#include <Core/LockFreeHashTable.hpp>
 
 namespace quinte::detail
 {
     namespace
     {
+        inline constexpr size_t kRegistrySize = memory::platform::kVirtualAllocationGranularity / LockFreeHashTable::kEntrySize;
+
         struct InterfaceRegistryImpl final
         {
-            threading::SpinLock m_Mutex;
-            std::pmr::unordered_map<uint64_t, void*> m_Instances;
+            LockFreeHashTable m_Instances{ kRegistrySize, memory::VirtualMemoryResource::Get() };
 
 
             inline void RegisterInstance(uint64_t typeHash, void* pInstance)
             {
-                const std::lock_guard lock{ m_Mutex };
-                QU_AssertDebug(m_Instances[typeHash] == nullptr);
-                m_Instances[typeHash] = pInstance;
+                const auto [success, prevValue] = m_Instances.Exchange(typeHash, pInstance);
+                QU_AssertDebug(success && prevValue == nullptr);
             }
 
             inline void UnregisterInstance(uint64_t typeHash, void* pInstance)
             {
-                const std::lock_guard lock{ m_Mutex };
-                QU_AssertDebug(m_Instances[typeHash] == pInstance);
-                m_Instances[typeHash] = nullptr;
+                const auto [success, prevValue] = m_Instances.Exchange(typeHash, nullptr);
+                QU_AssertDebug(success && prevValue == pInstance);
             }
 
-            inline void* FindInstance(uint64_t typeHash)
+            inline void* FindInstance(uint64_t typeHash) const
             {
-                const std::lock_guard lock{ m_Mutex };
-                return m_Instances[typeHash];
+                return m_Instances.Get(typeHash);
             }
         };
     } // namespace

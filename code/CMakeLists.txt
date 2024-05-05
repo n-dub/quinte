@@ -44,6 +44,7 @@
     Core/Hash.hpp
     Core/Interface.hpp
     Core/Interface.cpp
+    Core/LockFreeHashTable.hpp
     Core/String.hpp
     Core/StringBase.hpp
     Core/StringSlice.hpp
