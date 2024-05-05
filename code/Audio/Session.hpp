@@ -1,26 +1,24 @@
 ﻿#pragma once
 #include <Core/Core.hpp>
 #include <Core/Interface.hpp>
+#include <Core/EventBus.hpp>
+#include <Audio/AudioEngineEvents.hpp>
 
 namespace quinte
 {
     class PortManager;
-    class AudioEngine;
 
 
-    class Session final : public Interface<Session>::Registrar
+    class Session final
+        : public Interface<Session>::Registrar
+        , public EventBus<AudioEngineEvents>::Handler
     {
-        memory::unique_ptr<AudioEngine> m_pAudioEngine;
         memory::unique_ptr<PortManager> m_pPortManager;
 
+        void OnAudioStreamStarted() override;
+        void OnAudioStreamStopped() override;
+
     public:
-        Session();
         ~Session();
-
-        void OnStreamStarted();
-        void OnStreamStopped();
-
-        AudioEngine* GetAudioEngine() const;
-        PortManager* GetPortManager() const;
     };
 } // namespace quinte

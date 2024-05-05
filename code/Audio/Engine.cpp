@@ -1,6 +1,5 @@
 ﻿#include <Audio/Engine.hpp>
 #include <Audio/Backend/WASAPI.hpp>
-#include <Audio/Session.hpp>
 
 namespace quinte
 {
@@ -83,8 +82,7 @@ namespace quinte
         if (audio::Failed(startResult))
             return startResult;
 
-        // TODO: replace with an event bus to reduce coupling between systems.
-        Interface<Session>::Get()->OnStreamStarted();
+        Interface<EventBus<AudioEngineEvents>>::Get()->SendEvent(&AudioEngineEvents::OnAudioStreamStarted);
 
         const audio::PortDesc hwPortsDesc{ .Kind = audio::PortKind::Hardware, .Direction = audio::DataDirection::Output };
         m_HardwarePorts = StereoPorts::Create(hwPortsDesc);
@@ -108,6 +106,6 @@ namespace quinte
         m_MonitorPorts = {};
         m_HardwarePorts = {};
         m_Impl->CloseStream();
-        Interface<Session>::Get()->OnStreamStopped();
+        Interface<EventBus<AudioEngineEvents>>::Get()->SendEvent(&AudioEngineEvents::OnAudioStreamStopped);
     }
 } // namespace quinte

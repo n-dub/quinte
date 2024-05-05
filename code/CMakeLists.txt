@@ -23,6 +23,7 @@
     Audio/Ports/PortManager.hpp
     Audio/Ports/PortManager.cpp
     Audio/Base.hpp
+    Audio/AudioEngineEvents.hpp
     Audio/Engine.hpp
     Audio/Engine.cpp
     Audio/Session.hpp
@@ -39,6 +40,7 @@
     Core/Core.hpp
     Core/CoreMath.hpp
     Core/CoreTypes.hpp
+    Core/EventBus.hpp
     Core/FixedString.hpp
     Core/FixedVector.hpp
     Core/Hash.hpp

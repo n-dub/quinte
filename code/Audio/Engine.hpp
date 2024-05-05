@@ -2,6 +2,8 @@
 #include <Audio/Base.hpp>
 #include <Audio/Ports/AudioPort.hpp>
 #include <Core/Interface.hpp>
+#include <Core/EventBus.hpp>
+#include <Audio/AudioEngineEvents.hpp>
 
 namespace quinte
 {
@@ -140,6 +142,8 @@ namespace quinte
 
     class AudioEngine final : public Interface<AudioEngine>::Registrar
     {
+        EventBus<AudioEngineEvents> m_eventBus;
+
         memory::unique_ptr<IAudioAPI> m_Impl;
         size_t m_AudioBufferSize = 0;
 

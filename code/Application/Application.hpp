@@ -7,6 +7,7 @@ namespace quinte
 {
     class Application final : public VulkanApplication
     {
+        memory::unique_ptr<AudioEngine> m_pAudioEngine;
         memory::unique_ptr<Session> m_pCurrentSession;
 
         uint32_t m_SelectedInputDeviceIndex = 0;
