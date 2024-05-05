@@ -108,5 +108,6 @@ namespace quinte
         m_MonitorPorts = {};
         m_HardwarePorts = {};
         m_Impl->CloseStream();
+        Interface<Session>::Get()->OnStreamStopped();
     }
 } // namespace quinte

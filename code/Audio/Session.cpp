@@ -19,6 +19,12 @@ namespace quinte
     }
 
 
+    void Session::OnStreamStopped()
+    {
+        m_pPortManager.reset();
+    }
+
+
     AudioEngine* Session::GetAudioEngine() const
     {
         return m_pAudioEngine.get();

@@ -31,6 +31,8 @@ namespace quinte
     template<class T>
     inline void Interface<T>::Register(T* pInstance)
     {
+        // TODO: logging
+        printf("Registered %.*s\n", (int)TypeName<T>.length(), TypeName<T>.data());
         static_assert(TypeNameHash<T> != 0);
         detail::RegisterInstance(TypeNameHash<T>, pInstance);
     }
@@ -39,6 +41,7 @@ namespace quinte
     template<class T>
     inline void Interface<T>::Unregister(T* pInstance)
     {
+        printf("Unregistered %.*s\n", (int)TypeName<T>.length(), TypeName<T>.data());
         detail::UnregisterInstance(TypeNameHash<T>, pInstance);
     }
 

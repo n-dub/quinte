@@ -18,6 +18,7 @@ namespace quinte
         ~Session();
 
         void OnStreamStarted();
+        void OnStreamStopped();
 
         AudioEngine* GetAudioEngine() const;
         PortManager* GetPortManager() const;
