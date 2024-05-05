@@ -2,6 +2,7 @@
 #include <Audio/Base.hpp>
 #include <Audio/Buffers/AudioBufferView.hpp>
 #include <Core/Memory/MemoryPool.hpp>
+#include <Core/Interface.hpp>
 #include <unordered_map>
 
 namespace quinte
@@ -51,7 +52,7 @@ namespace quinte
     class Port;
 
 
-    class PortManager final
+    class PortManager final : public Interface<PortManager>::Registrar
     {
         friend class Port;
         friend class AudioPort;
@@ -60,7 +61,7 @@ namespace quinte
         MemoryPool m_AudioBufferPool;
 
         size_t m_AudioBufferSize;
-        std::pmr::unordered_map<uint32_t, Port*> m_PortHandleMap;
+        std::pmr::unordered_map<uint32_t, Port*, Hasher<uint32_t>> m_PortHandleMap;
 
         uint32_t m_currentPortIndex = 0;
 

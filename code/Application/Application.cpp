@@ -39,14 +39,8 @@ namespace quinte
     Application::Application()
         : VulkanApplication("Quinte")
     {
-        Session::LoadEmpty();
-        Session::Get()->GetAudioEngine()->InitializeAPI(audio::APIKind::WASAPI);
-    }
-
-
-    Application::~Application()
-    {
-        Session::Unload();
+        m_pCurrentSession = memory::make_unique<Session>();
+        Interface<AudioEngine>::Get()->InitializeAPI(audio::APIKind::WASAPI);
     }
 
 
@@ -80,7 +74,7 @@ namespace quinte
             TextUnformatted("Test " NF_FA_ARROW_RIGHT " " NF_COD_ACCOUNT " " NF_FA_MEMORY);
             TextUnformatted("API Kind: WASAPI");
 
-            const IAudioAPI* pAPI = Session::Get()->GetAudioEngine()->GetAPI();
+            const IAudioAPI* pAPI = Interface<AudioEngine>::Get()->GetAPI();
             const auto& devices = pAPI->GetDevices();
 
             const audio::DeviceDesc* pSelectedInDevice =
@@ -159,11 +153,11 @@ namespace quinte
                         .OutputDevice = pSelectedOutDevice->ID,
                         .BufferSize = 512,
                     };
-                    Session::Get()->GetAudioEngine()->Start(startInfo);
+                    Interface<AudioEngine>::Get()->Start(startInfo);
                 }
                 else
                 {
-                    Session::Get()->GetAudioEngine()->Stop();
+                    Interface<AudioEngine>::Get()->Stop();
                 }
             }
 

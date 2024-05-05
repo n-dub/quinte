@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <Core/StringBase.hpp>
 #include <Core/Unicode.hpp>
 #include <cassert>
@@ -249,22 +249,14 @@ namespace quinte
     {
         return lhs.Size() == rhs.Size() && lhs.Compare(rhs) >= 0;
     }
-} // namespace quinte
 
-namespace std
-{
-    inline ostream& operator<<(ostream& stream, quinte::StringSlice str)
-    {
-        return stream << std::string_view(str.Data(), str.Size());
-    }
 
     template<>
-    struct hash<quinte::StringSlice>
+    struct Hasher<StringSlice> final
     {
-        inline size_t operator()(const quinte::StringSlice& str) const noexcept
+        inline uint64_t operator()(StringSlice str) const noexcept
         {
-            std::hash<std::string_view> hasher;
-            return hasher(std::string_view(str.Data(), str.Size()));
+            return DefaultHash(str.Data(), str.Size());
         }
     };
-} // namespace std
+} // namespace quinte

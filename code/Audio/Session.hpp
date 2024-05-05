@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <Core/Core.hpp>
+#include <Core/Interface.hpp>
 
 namespace quinte
 {
@@ -7,7 +8,7 @@ namespace quinte
     class AudioEngine;
 
 
-    class Session final
+    class Session final : public Interface<Session>::Registrar
     {
         memory::unique_ptr<AudioEngine> m_pAudioEngine;
         memory::unique_ptr<PortManager> m_pPortManager;
@@ -20,10 +21,5 @@ namespace quinte
 
         AudioEngine* GetAudioEngine() const;
         PortManager* GetPortManager() const;
-
-        static Session* LoadEmpty();
-        static void Unload();
-
-        static Session* Get();
     };
 } // namespace quinte

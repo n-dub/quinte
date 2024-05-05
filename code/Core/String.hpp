@@ -575,17 +575,14 @@ namespace quinte
             return Iterator(ptr + size);
         }
     };
-} // namespace quinte
 
-namespace std
-{
+
     template<>
-    struct hash<quinte::String>
+    struct Hasher<String> final
     {
-        inline size_t operator()(const quinte::String& str) const noexcept
+        inline uint64_t operator()(const String& str) const noexcept
         {
-            std::hash<std::string_view> hasher;
-            return hasher(std::string_view(str.Data(), str.Size()));
+            return DefaultHash(str.Data(), str.Size());
         }
     };
-} // namespace std
+} // namespace quinte

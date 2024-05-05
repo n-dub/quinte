@@ -2,6 +2,7 @@
 #include <Core/Base.hpp>
 #include <Core/CoreMath.hpp>
 #include <Core/CoreTypes.hpp>
+#include <Core/Hash.hpp>
 #include <Core/Memory/Memory.hpp>
 #include <Core/Memory/RefCount.hpp>
 #include <cassert>
@@ -114,24 +115,6 @@ namespace quinte
         auto typeBitCount = sizeof(T) * 8;
         auto mask = bitCount == typeBitCount ? static_cast<T>(-1) : ((1 << bitCount) - 1);
         return static_cast<T>(mask << leftShift);
-    }
-
-
-    inline void HashCombine(size_t& /* seed */) {}
-
-
-    //! \brief Combine hashes of specified values with seed.
-    //!
-    //! \tparam Args - Types of values.
-    //!
-    //! \param [in,out] seed - Initial hash value to combine with.
-    //! \param [in]     args - The values to calculate hash of.
-    template<typename T, typename... Args>
-    inline void HashCombine(size_t& seed, const T& value, const Args&... args)
-    {
-        std::hash<T> hasher;
-        seed ^= hasher(value) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-        HashCombine(seed, args...);
     }
 
 

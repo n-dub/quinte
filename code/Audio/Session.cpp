@@ -4,10 +4,6 @@
 
 namespace quinte
 {
-    // TODO: we need to invent something better than a plain singleton.
-    static Session* g_CurrentSession = nullptr;
-
-
     Session::Session()
     {
         m_pAudioEngine = memory::make_unique<AudioEngine>();
@@ -32,25 +28,5 @@ namespace quinte
     PortManager* Session::GetPortManager() const
     {
         return m_pPortManager.get();
-    }
-
-
-    Session* Session::LoadEmpty()
-    {
-        g_CurrentSession = memory::DefaultNew<Session>();
-        return g_CurrentSession;
-    }
-
-
-    void Session::Unload()
-    {
-        memory::DefaultDelete(g_CurrentSession);
-        g_CurrentSession = nullptr;
-    }
-
-
-    Session* Session::Get()
-    {
-        return g_CurrentSession;
     }
 } // namespace quinte

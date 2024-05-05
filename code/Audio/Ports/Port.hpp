@@ -1,6 +1,5 @@
 ﻿#pragma once
 #include <Audio/Ports/PortManager.hpp>
-#include <Audio/Session.hpp>
 
 namespace quinte
 {
@@ -35,7 +34,7 @@ namespace quinte
         {
             const uint32_t refCount = --m_RefCount;
             if (refCount == 0)
-                Session::Get()->GetPortManager()->DeletePort(this);
+                Interface<PortManager>::Get()->DeletePort(this);
             return refCount;
         }
 

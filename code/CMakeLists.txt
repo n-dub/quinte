@@ -41,6 +41,9 @@
     Core/CoreTypes.hpp
     Core/FixedString.hpp
     Core/FixedVector.hpp
+    Core/Hash.hpp
+    Core/Interface.hpp
+    Core/Interface.cpp
     Core/String.hpp
     Core/StringBase.hpp
     Core/StringSlice.hpp

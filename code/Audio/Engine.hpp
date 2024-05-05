@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <Audio/Base.hpp>
 #include <Audio/Ports/AudioPort.hpp>
+#include <Core/Interface.hpp>
 
 namespace quinte
 {
@@ -137,7 +138,7 @@ namespace quinte
     };
 
 
-    class AudioEngine final
+    class AudioEngine final : public Interface<AudioEngine>::Registrar
     {
         memory::unique_ptr<IAudioAPI> m_Impl;
         size_t m_AudioBufferSize = 0;

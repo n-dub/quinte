@@ -84,7 +84,7 @@ namespace quinte
             return startResult;
 
         // TODO: replace with an event bus to reduce coupling between systems.
-        Session::Get()->OnStreamStarted();
+        Interface<Session>::Get()->OnStreamStarted();
 
         const audio::PortDesc hwPortsDesc{ .Kind = audio::PortKind::Hardware, .Direction = audio::DataDirection::Output };
         m_HardwarePorts = StereoPorts::Create(hwPortsDesc);

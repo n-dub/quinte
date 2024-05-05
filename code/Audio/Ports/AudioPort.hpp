@@ -17,7 +17,7 @@ namespace quinte
         inline ~AudioPort() override
         {
             if (m_BufferView.Data())
-                Session::Get()->GetPortManager()->DeallocateAudioBuffer(m_BufferView);
+                Interface<PortManager>::Get()->DeallocateAudioBuffer(m_BufferView);
         }
 
         inline AudioBufferView* GetBufferView() override
@@ -32,7 +32,7 @@ namespace quinte
 
         inline void AllocateBuffer() override
         {
-            m_BufferView = Session::Get()->GetPortManager()->AllocateAudioBuffer();
+            m_BufferView = Interface<PortManager>::Get()->AllocateAudioBuffer();
         }
     };
 
@@ -44,7 +44,7 @@ namespace quinte
 
         inline static StereoPorts Create(const audio::PortDesc& desc)
         {
-            PortManager* pPortManager = Session::Get()->GetPortManager();
+            PortManager* pPortManager = Interface<PortManager>::Get();
 
             StereoPorts result;
             result.Left = pPortManager->NewAudioPort(desc);
