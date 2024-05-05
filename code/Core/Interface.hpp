@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include <Core/Core.hpp>
+#include <Core/Hash.hpp>
 
 namespace quinte
 {

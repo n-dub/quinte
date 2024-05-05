@@ -5,8 +5,8 @@ namespace quinte::memory::platform
 {
     void* Allocate(size_t byteSize)
     {
-        QU_Assert(byteSize >= kVirtualAllocationGranularity);
-        QU_Assert(byteSize % kVirtualAllocationGranularity == 0);
+        QU_AssertDebug(byteSize >= kVirtualAllocationGranularity);
+        QU_AssertDebug(byteSize % kVirtualAllocationGranularity == 0);
         return VirtualAlloc(nullptr, byteSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     }
 

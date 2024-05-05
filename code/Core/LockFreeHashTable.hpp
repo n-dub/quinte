@@ -100,7 +100,7 @@ namespace quinte
                 if (entryIndex == startIndex && !firstLoop) [[unlikely]]
                     return nullptr;
 
-                Entry& entry = m_pEntries[entryIndex];
+                const Entry& entry = m_pEntries[entryIndex];
                 const uint64_t probedKey = entry.Key.load(std::memory_order_relaxed);
                 if (probedKey == key)
                     return entry.Value;

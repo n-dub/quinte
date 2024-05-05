@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include <Core/Core.hpp>
+#include <Core/Memory/Memory.hpp>
 
 namespace quinte::memory
 {
@@ -52,7 +52,6 @@ namespace quinte::memory
         struct DedicatedAllocation final
         {
             DedicatedAllocation* pNext = nullptr;
-            size_t Size = 0;
         };
 
         TempAllocator::Marker m_Marker;
@@ -67,10 +66,9 @@ namespace quinte::memory
 
             const size_t dedicatedOffset = AlignUp(sizeof(DedicatedAllocation), byteAlignment);
             const size_t dedicatedSize = dedicatedOffset + byteSize;
-            pointer = platform::Allocate(dedicatedSize);
+            pointer = memory::DefaultAlloc<void>(dedicatedSize);
 
             auto* pDedicated = static_cast<DedicatedAllocation*>(pointer);
-            pDedicated->Size = dedicatedSize;
             pDedicated->pNext = m_pFirstDedicated;
             m_pFirstDedicated = pDedicated;
 
@@ -97,7 +95,7 @@ namespace quinte::memory
             {
                 DedicatedAllocation* pOld = m_pFirstDedicated;
                 m_pFirstDedicated = m_pFirstDedicated->pNext;
-                platform::Deallocate(pOld, pOld->Size);
+                memory::DefaultFree(pOld);
             }
 
             m_pAllocator->Restore(m_Marker);

@@ -1,4 +1,5 @@
 ﻿#include <Core/Memory/TempAllocator.hpp>
+#include <Core/Core.hpp>
 
 namespace quinte::memory
 {
