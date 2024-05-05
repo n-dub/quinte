@@ -1,4 +1,4 @@
-#include <Core/Memory.hpp>
+﻿#include <Core/Memory/Memory.hpp>
 #include <Core/Windows/Utils.hpp>
 
 namespace quinte::memory::platform

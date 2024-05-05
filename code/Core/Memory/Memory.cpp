@@ -1,4 +1,4 @@
-﻿#include <Core/Memory.hpp>
+﻿#include <Core/Memory/Memory.hpp>
 #include <mimalloc.h>
 
 namespace quinte::memory::detail

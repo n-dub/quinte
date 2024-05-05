@@ -1,6 +1,6 @@
 ﻿#include <Core/Threading.hpp>
 #include <Core/Windows/Utils.hpp>
-#include <Core/MemoryPool.hpp>
+#include <Core/Memory/MemoryPool.hpp>
 
 #ifdef CreateMutex
 #    undef CreateMutex

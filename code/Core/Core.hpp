@@ -2,8 +2,8 @@
 #include <Core/Base.hpp>
 #include <Core/CoreMath.hpp>
 #include <Core/CoreTypes.hpp>
-#include <Core/Memory.hpp>
-#include <Core/RefCount.hpp>
+#include <Core/Memory/Memory.hpp>
+#include <Core/Memory/RefCount.hpp>
 #include <cassert>
 #include <concepts>
 #include <format>

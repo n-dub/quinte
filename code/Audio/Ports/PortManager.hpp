@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include <Audio/Base.hpp>
 #include <Audio/Buffers/AudioBufferView.hpp>
-#include <Core/MemoryPool.hpp>
+#include <Core/Memory/MemoryPool.hpp>
 #include <unordered_map>
 
 namespace quinte

@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include <Core/Memory.hpp>
+#include <Core/Memory/Memory.hpp>
 #include <atomic>
 #include <concepts>
 #include <memory_resource>

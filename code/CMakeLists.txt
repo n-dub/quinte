@@ -28,22 +28,22 @@
     Audio/Session.hpp
     Audio/Session.cpp
 
+    Core/Memory/Memory.hpp
+    Core/Memory/Memory.cpp
+    Core/Memory/MemoryPool.hpp
+    Core/Memory/MemoryPool.cpp
+    Core/Memory/RefCount.hpp
+    Core/Memory/TempAllocator.hpp
+    Core/Memory/TempAllocator.cpp
     Core/Base.hpp
     Core/Core.hpp
     Core/CoreMath.hpp
     Core/CoreTypes.hpp
     Core/FixedString.hpp
     Core/FixedVector.hpp
-    Core/Memory.hpp
-    Core/Memory.cpp
-    Core/MemoryPool.hpp
-    Core/MemoryPool.cpp
-    Core/RefCount.hpp
     Core/String.hpp
     Core/StringBase.hpp
     Core/StringSlice.hpp
-    Core/TempAllocator.hpp
-    Core/TempAllocator.cpp
     Core/Threading.hpp
     Core/Unicode.hpp
     Core/${QUINTE_PLATFORM_NAME}/Utils.hpp
