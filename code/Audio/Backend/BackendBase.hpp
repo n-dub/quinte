@@ -33,7 +33,7 @@ namespace quinte
         {
             uint32_t Jump;
             audio::Format Format;
-            FixedVector<int32_t, 2> Offset;
+            SmallVector<int32_t, 2> Offset;
         } In, Out;
     };
 

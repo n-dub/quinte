@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include <Core/Memory/Memory.hpp>
+#include <Core/Core.hpp>
 
 namespace quinte::memory
 {

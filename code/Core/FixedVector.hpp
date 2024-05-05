@@ -1,9 +1,20 @@
-#pragma once
+﻿#pragma once
 #include <Core/Core.hpp>
-#include <array>
+#include <gch/small_vector.hpp>
 
 namespace quinte
 {
+#if __INTELLISENSE__
+    // for some reason intellisense can't handle this
+
+    template<class T, size_t TCapacity = gch::default_buffer_size_v<std::allocator<T>>>
+    using SmallVector = gch::small_vector<T, TCapacity>;
+#else
+    template<class T, size_t TCapacity = gch::default_buffer_size_v<memory::StdDefaultAllocator<T, uint32_t>>>
+    using SmallVector = gch::small_vector<T, TCapacity, memory::StdDefaultAllocator<T, uint32_t>>;
+#endif
+
+
     template<class T, size_t TCapacity>
     class FixedVector final
     {

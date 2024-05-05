@@ -1,7 +1,6 @@
-CPMAddPackage(
+﻿CPMAddPackage(
     NAME mimalloc
     GITHUB_REPOSITORY microsoft/mimalloc
-    GIT_TAG v2.1.4
     VERSION 2.1.4
     OPTIONS
           "MI_BUILD_SHARED OFF"

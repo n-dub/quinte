@@ -398,4 +398,43 @@ namespace quinte::memory
     {
         return unique_ptr<T>(DefaultNew<T>(std::forward<TArgs>(args)...));
     }
+
+
+    template<class T, class TSizeType = size_t>
+    class StdDefaultAllocator final
+    {
+    public:
+        using value_type = T;
+        using size_type = TSizeType;
+
+        constexpr StdDefaultAllocator() noexcept {}
+        inline constexpr StdDefaultAllocator(const StdDefaultAllocator&) noexcept {}
+
+        template<class U>
+        inline constexpr StdDefaultAllocator(const StdDefaultAllocator<U, TSizeType>&) noexcept
+        {
+        }
+
+        [[nodiscard]] inline T* allocate(size_t n) const
+        {
+            return static_cast<T*>(detail::DefaultAlloc(n));
+        }
+
+        inline void deallocate(T* ptr, size_t) const
+        {
+            detail::DefaultFree(ptr);
+        }
+
+        template<class U>
+        inline bool operator==(const StdDefaultAllocator<U, TSizeType>&) noexcept
+        {
+            return true;
+        }
+
+        template<class U>
+        inline bool operator!=(const StdDefaultAllocator<U, TSizeType>&) noexcept
+        {
+            return false;
+        }
+    };
 } // namespace quinte::memory

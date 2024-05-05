@@ -66,7 +66,7 @@
 
 
 add_library(quinte-lib STATIC ${QUINTE_SRC})
-target_link_libraries(quinte-lib imgui gcem mimalloc-static)
+target_link_libraries(quinte-lib imgui gcem mimalloc-static gch::small_vector)
 target_include_directories(quinte-lib PUBLIC "${QUINTE_PROJECT_ROOT}/code")
 quinte_configure_target(quinte-lib)
 
