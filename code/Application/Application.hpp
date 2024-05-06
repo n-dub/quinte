@@ -2,16 +2,19 @@
 #include <Application/VulkanApplication.hpp>
 #include <Audio/Engine.hpp>
 #include <Audio/Session.hpp>
+#include <Core/Interface.hpp>
+#include <UI/Windows/WorkArea.hpp>
 
 namespace quinte
 {
-    class Application final : public VulkanApplication
+    class Application final
+        : public VulkanApplication
+        , public Interface<Application>::Registrar
     {
         memory::unique_ptr<AudioEngine> m_pAudioEngine;
         memory::unique_ptr<Session> m_pCurrentSession;
 
-        uint32_t m_SelectedInputDeviceIndex = 0;
-        uint32_t m_SelectedOutputDeviceIndex = 0;
+        WorkArea m_WorkArea;
 
     public:
         Application();

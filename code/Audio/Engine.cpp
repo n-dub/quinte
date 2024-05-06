@@ -54,7 +54,7 @@ namespace quinte
     }
 
 
-    audio::ResultCode quinte::AudioEngine::Start(const audio::EngineStartInfo& startInfo)
+    audio::ResultCode AudioEngine::Start(const audio::EngineStartInfo& startInfo)
     {
         QU_AssertDebug(m_Impl->GetState() == audio::StreamState::Closed);
 
@@ -82,7 +82,7 @@ namespace quinte
         if (audio::Failed(startResult))
             return startResult;
 
-        Interface<EventBus<AudioEngineEvents>>::Get()->SendEvent(&AudioEngineEvents::OnAudioStreamStarted);
+        EventBus<AudioEngineEvents>::SendEvent(&AudioEngineEvents::OnAudioStreamStarted);
 
         const audio::PortDesc hwPortsDesc{ .Kind = audio::PortKind::Hardware, .Direction = audio::DataDirection::Output };
         m_HardwarePorts = StereoPorts::Create(hwPortsDesc);
@@ -100,12 +100,12 @@ namespace quinte
     }
 
 
-    void quinte::AudioEngine::Stop()
+    void AudioEngine::Stop()
     {
         m_Running.store(false);
         m_MonitorPorts = {};
         m_HardwarePorts = {};
         m_Impl->CloseStream();
-        Interface<EventBus<AudioEngineEvents>>::Get()->SendEvent(&AudioEngineEvents::OnAudioStreamStopped);
+        EventBus<AudioEngineEvents>::SendEvent(&AudioEngineEvents::OnAudioStreamStopped);
     }
 } // namespace quinte

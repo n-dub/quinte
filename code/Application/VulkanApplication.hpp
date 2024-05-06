@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <Application/BaseApplication.hpp>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
@@ -42,5 +42,15 @@ namespace quinte
 
     public:
         ~VulkanApplication() override;
+
+        [[nodiscard]] inline int32_t GetWidth() const
+        {
+            return m_MainWindowData.Width;
+        }
+
+        [[nodiscard]] inline int32_t GetHeight() const
+        {
+            return m_MainWindowData.Height;
+        }
     };
 } // namespace quinte

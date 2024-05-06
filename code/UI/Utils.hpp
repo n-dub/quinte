@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <Core/Core.hpp>
 #include <UI/Colors.hpp>
 #include <imgui.h>
@@ -84,6 +84,13 @@ namespace quinte
         bool Enabled;
 
         inline ColorScope(ImGuiCol idx, uint32_t col, bool enable = true)
+            : Enabled(enable)
+        {
+            if (enable)
+                ImGui::PushStyleColor(idx, col);
+        }
+
+        inline ColorScope(ImGuiCol idx, const ImVec4& col, bool enable = true)
             : Enabled(enable)
         {
             if (enable)

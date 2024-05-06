@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <Core/Core.hpp>
 #include <Core/FixedString.hpp>
 #include <UI/Alerts.hpp>
@@ -34,6 +34,11 @@ namespace quinte
 
     public:
         virtual ~BaseApplication();
+
+        [[nodiscard]] inline ImVec4 GetBackgroundColor() const
+        {
+            return m_ClearColor;
+        }
 
         bool Initialize();
         int32_t Run();

@@ -29,10 +29,10 @@ namespace quinte
         SmallVector<EventHandler<TEvent>*> m_Handlers;
 
         template<class F, class... Args>
-        inline void SendEventInternal(F&& function, Args&&... args);
+        inline void SendEventImpl(F&& function, Args&&... args);
 
-        inline void RegisterHandlerInternal(EventHandler<TEvent>* handler);
-        inline void UnregisterHandlerInternal(EventHandler<TEvent>* handler);
+        inline void RegisterHandlerImpl(EventHandler<TEvent>* handler);
+        inline void UnregisterHandlerImpl(EventHandler<TEvent>* handler);
 
         static EventBus* Get();
 
@@ -51,7 +51,7 @@ namespace quinte
 
     template<class TEvent>
     template<class F, class... Args>
-    void EventBus<TEvent>::SendEventInternal(F&& function, Args&&... args)
+    void EventBus<TEvent>::SendEventImpl(F&& function, Args&&... args)
     {
         for (Handler* pHandler : m_Handlers)
         {
@@ -64,19 +64,19 @@ namespace quinte
     template<class F, class... Args>
     void EventBus<TEvent>::SendEvent(F&& function, Args&&... args)
     {
-        Get()->SendEventInternal(std::forward<F>(function), std::forward<Args>(args)...);
+        Get()->SendEventImpl(std::forward<F>(function), std::forward<Args>(args)...);
     }
 
 
     template<class TEvent>
-    void EventBus<TEvent>::RegisterHandlerInternal(Handler* handler)
+    void EventBus<TEvent>::RegisterHandlerImpl(Handler* handler)
     {
         m_Handlers.push_back(handler);
     }
 
 
     template<class TEvent>
-    void EventBus<TEvent>::UnregisterHandlerInternal(Handler* handler)
+    void EventBus<TEvent>::UnregisterHandlerImpl(Handler* handler)
     {
         const auto it = std::find(m_Handlers.begin(), m_Handlers.end(), handler);
         QU_AssertDebug(it != m_Handlers.end());
@@ -87,14 +87,14 @@ namespace quinte
     template<class TEvent>
     void EventBus<TEvent>::RegisterHandler(EventHandler<TEvent>* handler)
     {
-        Get()->RegisterHandlerInternal(handler);
+        Get()->RegisterHandlerImpl(handler);
     }
 
 
     template<class TEvent>
     void EventBus<TEvent>::UnregisterHandler(EventHandler<TEvent>* handler)
     {
-        Get()->UnregisterHandlerInternal(handler);
+        Get()->UnregisterHandlerImpl(handler);
     }
 
 

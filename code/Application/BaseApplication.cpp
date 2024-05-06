@@ -1,4 +1,4 @@
-#include <Application/BaseApplication.hpp>
+﻿#include <Application/BaseApplication.hpp>
 #include <UI/Utils.hpp>
 
 #if QU_WINDOWS
@@ -93,6 +93,7 @@ namespace quinte
             return false;
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
         m_pWindow = glfwCreateWindow(1280, 720, m_Name.Data(), nullptr, nullptr);
 
         IMGUI_CHECKVERSION();

@@ -1,4 +1,4 @@
-#include <UI/Icons.hpp>
+﻿#include <UI/Icons.hpp>
 #include <UI/Widgets/Track.hpp>
 #include <numbers>
 #include <numeric>
@@ -447,6 +447,14 @@ namespace quinte
             SetCursorPosY(GetCursorPosY() + 8.0f);
             if (ui::Fader("##Fader", &FaderAmplitude, Volume, 200.0f))
                 valuesChanged = true;
+
+            SetCursorPos(ImVec2{ labelX, GetCursorPosY() + 8.0f });
+            ui::ToggleButton("I", &Monitored, ImVec2{ labelWidth, 0.0f }, colors::kLightGray);
+            SetItemTooltip(Monitored ? "input monitoring on" : "input monitoring off");
+
+            SameLine(0.0f, labelX);
+            ui::ToggleButton(NF_MD_RECORD, &RecordArmed, ImVec2{ labelWidth, 0.0f }, colors::kDarkRed);
+            SetItemTooltip(RecordArmed ? "armed for recording" : "not armed for recording");
 
             SetCursorPos(ImVec2{ labelX, GetCursorPosY() + 8.0f });
             ui::ToggleButton("M", &Muted, ImVec2{ labelWidth, 0.0f }, colors::kRed);

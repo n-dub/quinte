@@ -1,5 +1,5 @@
 ﻿#include <Core/Memory/Memory.hpp>
-#include <Core/Windows/Utils.hpp>
+#include <Core/Platform/Windows/Utils.hpp>
 
 namespace quinte::memory::platform
 {

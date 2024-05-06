@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <Core/FixedString.hpp>
 #include <Core/String.hpp>
 #include <UI/Utils.hpp>
@@ -33,6 +33,8 @@ namespace quinte
         float Pan = 0.0f;
         bool Soloed = false;
         bool Muted = false;
+        bool Monitored = false;
+        bool RecordArmed = false;
 
         bool Draw();
     };

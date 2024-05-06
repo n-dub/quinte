@@ -52,18 +52,23 @@
     Core/StringSlice.hpp
     Core/Threading.hpp
     Core/Unicode.hpp
-    Core/${QUINTE_PLATFORM_NAME}/Utils.hpp
-    Core/${QUINTE_PLATFORM_NAME}/Threading.cpp
-    Core/${QUINTE_PLATFORM_NAME}/Memory.cpp
+    Core/Platform/${QUINTE_PLATFORM_NAME}/Utils.hpp
+    Core/Platform/${QUINTE_PLATFORM_NAME}/Threading.cpp
+    Core/Platform/${QUINTE_PLATFORM_NAME}/Memory.cpp
 
     UI/Widgets/Track.hpp
     UI/Widgets/Track.cpp
+    UI/Windows/BaseWindow.hpp
+    UI/Windows/EditWindow.hpp
+    UI/Windows/EditWindow.cpp
+    UI/Windows/WorkArea.hpp
+    UI/Windows/WorkArea.cpp
     UI/Alerts.hpp
     UI/Colors.hpp
     UI/Icons.hpp
     UI/Utils.hpp
     UI/Utils.cpp
-    UI/${QUINTE_PLATFORM_NAME}/Alerts.cpp
+    UI/Platform/${QUINTE_PLATFORM_NAME}/Alerts.cpp
 )
 
 

@@ -65,7 +65,7 @@ PenaltyReturnTypeOnItsOwnLine: 99999
 PointerAlignment: Left
 ReflowComments: false
 RequiresClausePosition: OwnLine
-SortIncludes: false
+SortIncludes: CaseInsensitive
 SortUsingDeclarations: true
 SpaceAfterCStyleCast: false
 SpaceAfterLogicalNot: false
