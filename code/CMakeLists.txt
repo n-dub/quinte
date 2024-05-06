@@ -22,6 +22,9 @@
     Audio/Ports/Port.hpp
     Audio/Ports/PortManager.hpp
     Audio/Ports/PortManager.cpp
+    Audio/Tracks/Clip.hpp
+    Audio/Tracks/Fader.hpp
+    Audio/Tracks/Track.hpp
     Audio/Base.hpp
     Audio/AudioEngineEvents.hpp
     Audio/Engine.hpp
@@ -56,8 +59,12 @@
     Core/Platform/${QUINTE_PLATFORM_NAME}/Threading.cpp
     Core/Platform/${QUINTE_PLATFORM_NAME}/Memory.cpp
 
-    UI/Widgets/Track.hpp
-    UI/Widgets/Track.cpp
+    UI/Widgets/Tracks/TrackMixerView.hpp
+    UI/Widgets/Tracks/TrackMixerView.cpp
+    UI/Widgets/Tracks/TracksCommon.hpp
+    UI/Widgets/Tracks/TracksCommon.cpp
+    UI/Widgets/Common.hpp
+    UI/Widgets/Common.cpp
     UI/Windows/BaseWindow.hpp
     UI/Windows/EditWindow.hpp
     UI/Windows/EditWindow.cpp

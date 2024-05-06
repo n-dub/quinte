@@ -1,6 +1,7 @@
 ﻿#include <Application/Application.hpp>
+#include <Audio/Tracks/Track.hpp>
 #include <UI/Icons.hpp>
-#include <UI/Widgets/Track.hpp>
+#include <UI/Widgets/Tracks/TrackMixerView.hpp>
 #include <UI/Windows/EditWindow.hpp>
 #include <UI/Windows/WorkArea.hpp>
 
@@ -11,6 +12,25 @@ namespace quinte
     WorkArea::WorkArea()
     {
         m_pEditWindow = memory::make_unique<EditWindow>();
+
+        m_Tracks.push_back(TrackMixerView{
+            .pTrack = Rc<Track>::DefaultNew(audio::DataType::Audio, audio::DataType::Audio),
+            .ID = 0,
+            .Color = colors::kDarkRed,
+        });
+        m_Tracks.push_back(TrackMixerView{
+            .pTrack = Rc<Track>::DefaultNew(audio::DataType::Audio, audio::DataType::Audio),
+            .ID = 1,
+            .Color = colors::kDarkGreen,
+        });
+        m_Tracks.push_back(TrackMixerView{
+            .pTrack = Rc<Track>::DefaultNew(audio::DataType::Audio, audio::DataType::Audio),
+            .ID = 2,
+            .Color = colors::kRebeccaPurple,
+        });
+
+        m_Tracks[0].pTrack->SetName("Test Track");
+        m_Tracks[1].pTrack->SetName("Test 2");
     }
 
 
@@ -191,30 +211,19 @@ namespace quinte
                     Interface<AudioEngine>::Get()->Stop();
                 }
             }
-
-            static TrackMixerView s_TrackMixerView;
-            s_TrackMixerView.Color = colors::kDarkRed;
-            s_TrackMixerView.Volume = s_TrackMixerView.FaderAmplitude;
-            s_TrackMixerView.Name = "Test Track";
-            s_TrackMixerView.ID = 0;
-            s_TrackMixerView.Draw();
-
-            SameLine();
-            static TrackMixerView s_TrackMixerView1;
-            s_TrackMixerView1.Color = colors::kDarkGreen;
-            s_TrackMixerView1.Volume = s_TrackMixerView1.FaderAmplitude;
-            s_TrackMixerView1.Name = "Test 2";
-            s_TrackMixerView1.ID = 1;
-            s_TrackMixerView1.Draw();
-
-            SameLine();
-            static TrackMixerView s_TrackMixerView2;
-            s_TrackMixerView2.Color = colors::kRebeccaPurple;
-            s_TrackMixerView2.Volume = s_TrackMixerView2.FaderAmplitude;
-            s_TrackMixerView2.ID = 2;
-            s_TrackMixerView2.Draw();
         }
+        End();
 
+        if (Begin("Mix Window"))
+        {
+            for (TrackMixerView& trackView : m_Tracks)
+            {
+                if (trackView.ID > 0)
+                    SameLine();
+
+                trackView.Draw();
+            }
+        }
         End();
     }
 } // namespace quinte

@@ -103,14 +103,14 @@ namespace quinte
 
 
     template<class T>
-    concept RefCountedObject = (alignof(T) <= memory::kDefaultAlignment) && requires(T* t) {
-        {
-            t->AddRef()
-        } -> std::unsigned_integral;
-        {
-            t->Release()
-        } -> std::unsigned_integral;
-    };
+    concept RefCountedObject = (sizeof(T) == 0) || ((alignof(T) <= memory::kDefaultAlignment) && requires(T* t) {
+                                   {
+                                       t->AddRef()
+                                   } -> std::unsigned_integral;
+                                   {
+                                       t->Release()
+                                   } -> std::unsigned_integral;
+                               });
 
 
     template<RefCountedObject T>

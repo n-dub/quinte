@@ -67,6 +67,11 @@ namespace quinte
             return m_Size;
         }
 
+        [[nodiscard]] inline constexpr bool Empty() const noexcept
+        {
+            return m_Size == 0;
+        }
+
         // O(N)
         [[nodiscard]] inline size_t Length() const noexcept
         {
