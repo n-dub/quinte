@@ -4,6 +4,69 @@
 
 namespace quinte::audio
 {
+    template<std::unsigned_integral T>
+    struct TimePos final
+    {
+        T SampleIndex = 0;
+
+        inline TimePos() = default;
+
+        inline TimePos(uint64_t sampleIndex)
+            : SampleIndex(static_cast<T>(sampleIndex))
+        {
+        }
+
+        [[nodiscard]] inline uint64_t GetSampleIndex() const
+        {
+            return static_cast<uint64_t>(SampleIndex);
+        }
+
+        inline friend auto operator<=>(TimePos lhs, TimePos rhs) = default;
+    };
+
+    template<std::unsigned_integral T>
+    struct TimeRange final
+    {
+        TimePos<T> StartPos;
+        T Length = 0;
+
+        inline TimeRange() = default;
+
+        inline TimeRange(uint64_t firstSampleIndex, uint64_t sampleCount)
+            : StartPos(firstSampleIndex)
+            , Length(static_cast<T>(sampleCount))
+        {
+        }
+
+        [[nodiscard]] inline uint64_t GetFirstSampleIndex() const
+        {
+            return StartPos.GetSampleIndex();
+        }
+
+        [[nodiscard]] inline uint64_t GetLastSampleIndex() const
+        {
+            return StartPos.GetSampleIndex() + static_cast<uint64_t>(Length);
+        }
+
+        [[nodiscard]] inline uint64_t GetLengthInSamples() const
+        {
+            return static_cast<uint64_t>(Length);
+        }
+
+        template<std::unsigned_integral U>
+        [[nodiscard]] inline friend auto operator+(const TimeRange& lhs, const TimePos<U>& rhs)
+            -> std::conditional_t<(sizeof(T) > sizeof(U)), TimeRange<T>, TimeRange<U>>
+        {
+            return { lhs.StartPos.SampleIndex + rhs.SampleIndex, lhs.Length };
+        }
+    };
+
+    using TimePos32 = TimePos<uint32_t>;
+    using TimePos64 = TimePos<uint64_t>;
+    using TimeRange32 = TimeRange<uint32_t>;
+    using TimeRange64 = TimeRange<uint64_t>;
+
+
     enum class Format : uint32_t
     {
         None = 0,

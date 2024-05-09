@@ -1,8 +1,9 @@
 ﻿#pragma once
-#include <Core/Core.hpp>
-#include <Core/Interface.hpp>
-#include <Core/EventBus.hpp>
 #include <Audio/AudioEngineEvents.hpp>
+#include <Audio/Tracks/TrackList.hpp>
+#include <Core/Core.hpp>
+#include <Core/EventBus.hpp>
+#include <Core/Interface.hpp>
 
 namespace quinte
 {
@@ -14,11 +15,18 @@ namespace quinte
         , public EventBus<AudioEngineEvents>::Handler
     {
         memory::unique_ptr<PortManager> m_pPortManager;
+        TrackList m_TrackList;
 
         void OnAudioStreamStarted() override;
         void OnAudioStreamStopped() override;
 
     public:
+        Session();
         ~Session();
+
+        inline TrackList& GetTrackList()
+        {
+            return m_TrackList;
+        }
     };
 } // namespace quinte

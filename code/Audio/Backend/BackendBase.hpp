@@ -120,6 +120,8 @@ namespace quinte
         }
 
         size_t GetAudioBufferSize() const override;
+        uint32_t GetSampleRate() const override;
+
         audio::ResultCode OpenStream(audio::StreamOpenInfo& openInfo) override;
         std::span<const audio::DeviceDesc> GetDevices() const override;
         audio::StreamState GetState() const override;

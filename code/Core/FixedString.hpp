@@ -9,9 +9,11 @@ namespace quinte
     {
         static_assert(TCapacity <= (1 << 24));
 
+        using SizeBaseType = std::conditional_t<TCapacity <= 255, uint16_t, uint32_t>;
+
         TChar m_Data[TCapacity];
-        uint32_t m_Zero : 8;
-        uint32_t m_Size : 24;
+        SizeBaseType m_Zero : 8;
+        SizeBaseType m_Size : (sizeof(SizeBaseType) - 1) * 8;
 
         template<size_t TFmtCapacity>
         friend class FixedFmt;
@@ -33,7 +35,7 @@ namespace quinte
         {
             QU_Assert(length <= TCapacity);
             memset(m_Data, value, length);
-            m_Size = static_cast<uint32_t>(length);
+            m_Size = static_cast<SizeBaseType>(length);
             m_Data[m_Size] = 0;
         }
 
@@ -42,7 +44,7 @@ namespace quinte
         {
             QU_Assert(byteSize <= TCapacity);
             memory::Copy(m_Data, str, byteSize);
-            m_Size = static_cast<uint32_t>(byteSize);
+            m_Size = static_cast<SizeBaseType>(byteSize);
             m_Data[m_Size] = 0;
         }
 
@@ -153,7 +155,7 @@ namespace quinte
                 return *this;
 
             memory::Copy(Data() + Size(), str, count);
-            m_Size += static_cast<uint32_t>(count);
+            m_Size += static_cast<SizeBaseType>(count);
             m_Data[m_Size] = 0;
             return *this;
         }
@@ -177,7 +179,7 @@ namespace quinte
         {
             QU_Assert(length <= TCapacity);
             memset(m_Data, value, length);
-            m_Size = static_cast<uint32_t>(length);
+            m_Size = static_cast<SizeBaseType>(length);
             m_Data[m_Size] = 0;
         }
 
@@ -330,7 +332,7 @@ namespace quinte
         inline FixedFmt(std::string_view fmt, TArgs&&... args)
         {
             TChar* ptr = std::vformat_to(m_Data.Data(), fmt, std::make_format_args(std::forward<TArgs>(args)...));
-            m_Data.m_Size = static_cast<uint32_t>(ptr - m_Data.Data());
+            m_Data.m_Size = static_cast<FixedString<TCapacity>::SizeBaseType>(ptr - m_Data.Data());
             QU_Assert(m_Data.m_Size <= TCapacity);
             *ptr = '\0';
         }

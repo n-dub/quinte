@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include <UI/Widgets/Tracks/TrackEditView.hpp>
 #include <UI/Windows/BaseWindow.hpp>
 
 namespace quinte
@@ -7,11 +8,10 @@ namespace quinte
         : public BaseWindow
         , public Interface<EditWindow>::Registrar
     {
+        float m_LeftPanelSize = 150.0f;
+
     public:
-        inline EditWindow()
-            : BaseWindow("EditWindow")
-        {
-        }
+        EditWindow();
 
         void DrawUI() override;
     };

@@ -22,16 +22,26 @@
     Audio/Ports/Port.hpp
     Audio/Ports/PortManager.hpp
     Audio/Ports/PortManager.cpp
-    Audio/Tracks/Clip.hpp
+    Audio/Sources/AudioSource.hpp
+    Audio/Sources/BufferAudioSource.hpp
+    Audio/Sources/BufferAudioSource.cpp
+    Audio/Sources/Source.hpp
+    Audio/Tracks/AudioClip.hpp
+    Audio/Tracks/Playlist.hpp
+    Audio/Tracks/Playlist.cpp
     Audio/Tracks/Fader.hpp
     Audio/Tracks/Track.hpp
+    Audio/Tracks/TrackList.hpp
     Audio/Base.hpp
     Audio/AudioEngineEvents.hpp
     Audio/Engine.hpp
     Audio/Engine.cpp
     Audio/Session.hpp
     Audio/Session.cpp
+    Audio/Transport.hpp
 
+    Core/Memory/LinearAllocator.hpp
+    Core/Memory/LinearAllocator.cpp
     Core/Memory/Memory.hpp
     Core/Memory/Memory.cpp
     Core/Memory/MemoryPool.hpp
@@ -39,6 +49,9 @@
     Core/Memory/RefCount.hpp
     Core/Memory/TempAllocator.hpp
     Core/Memory/TempAllocator.cpp
+    Core/Platform/${QUINTE_PLATFORM_NAME}/Utils.hpp
+    Core/Platform/${QUINTE_PLATFORM_NAME}/Threading.cpp
+    Core/Platform/${QUINTE_PLATFORM_NAME}/Memory.cpp
     Core/Base.hpp
     Core/Core.hpp
     Core/CoreMath.hpp
@@ -55,10 +68,14 @@
     Core/StringSlice.hpp
     Core/Threading.hpp
     Core/Unicode.hpp
-    Core/Platform/${QUINTE_PLATFORM_NAME}/Utils.hpp
-    Core/Platform/${QUINTE_PLATFORM_NAME}/Threading.cpp
-    Core/Platform/${QUINTE_PLATFORM_NAME}/Memory.cpp
 
+    Graph/ExecutionGraph.hpp
+    Graph/ExecutionGraph.cpp
+    Graph/ExecutionGraphNode.hpp
+
+    UI/Platform/${QUINTE_PLATFORM_NAME}/Alerts.cpp
+    UI/Widgets/Tracks/TrackEditView.hpp
+    UI/Widgets/Tracks/TrackEditView.cpp
     UI/Widgets/Tracks/TrackMixerView.hpp
     UI/Widgets/Tracks/TrackMixerView.cpp
     UI/Widgets/Tracks/TracksCommon.hpp
@@ -75,7 +92,6 @@
     UI/Icons.hpp
     UI/Utils.hpp
     UI/Utils.cpp
-    UI/Platform/${QUINTE_PLATFORM_NAME}/Alerts.cpp
 )
 
 

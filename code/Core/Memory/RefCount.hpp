@@ -263,22 +263,12 @@ namespace quinte
             return detail::PtrRef<Rc<T>>(this);
         }
 
-        inline T& operator*()
+        inline T& operator*() const
         {
             return *Get();
         }
 
-        inline T* operator->()
-        {
-            return Get();
-        }
-
-        inline const T& operator*() const
-        {
-            return *Get();
-        }
-
-        inline const T* operator->() const
+        inline T* operator->() const
         {
             return Get();
         }

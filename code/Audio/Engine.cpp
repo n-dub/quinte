@@ -1,5 +1,8 @@
-﻿#include <Audio/Engine.hpp>
+﻿#include "Engine.hpp"
 #include <Audio/Backend/WASAPI.hpp>
+#include <Audio/Engine.hpp>
+#include <Audio/Transport.hpp>
+#include <Graph/ExecutionGraph.hpp>
 
 namespace quinte
 {
@@ -22,6 +25,37 @@ namespace quinte
             return audio::CallbackResult::OK;
         }
 
+        Transport* pTransport = Interface<Transport>::Get();
+        pTransport->m_Playhead = pTransport->m_PlayheadRequest;
+        pTransport->m_Recording = pTransport->m_RecordingRequested;
+
+        audio::PlayState playState = pTransport->m_PlayState;
+        while (playState == audio::PlayState::PauseRequested || playState == audio::PlayState::RollRequested)
+        {
+            if (playState == audio::PlayState::PauseRequested)
+            {
+                if (pTransport->m_PlayState.compare_exchange_weak(playState, audio::PlayState::Paused))
+                    break;
+            }
+            if (playState == audio::PlayState::RollRequested)
+            {
+                if (pTransport->m_PlayState.compare_exchange_weak(playState, audio::PlayState::Rolling))
+                    break;
+            }
+        }
+
+        QU_Defer
+        {
+            if (pTransport->IsActuallyRolling())
+                pTransport->AddToPlayhead(frameCount);
+        };
+
+        m_MonitorPorts.Left->GetBufferView()->Clear();
+        m_MonitorPorts.Right->GetBufferView()->Clear();
+
+        const audio::EngineProcessInfo processInfo{ .StartTime = pTransport->m_Playhead, .LocalRange = { 0, frameCount } };
+        m_Graph->Run(processInfo);
+
         AudioBufferView* pHWL = m_HardwarePorts.Left->GetBufferView();
         pHWL->Read(static_cast<float*>(pInputBuffer), 0, frameCount);
 
@@ -29,16 +63,17 @@ namespace quinte
         pHWR->Read(static_cast<float*>(pInputBuffer) + frameCount, 0, frameCount);
 
         AudioBufferView* pML = m_MonitorPorts.Left->GetBufferView();
-        pML->Read(pHWL, 0, 0, frameCount);
-
         AudioBufferView* pMR = m_MonitorPorts.Right->GetBufferView();
-        pMR->Read(pHWR, 0, 0, frameCount);
 
         memory::Copy(static_cast<float*>(pOutputBuffer), pML->Data(), frameCount);
         memory::Copy(static_cast<float*>(pOutputBuffer) + frameCount, pMR->Data(), frameCount);
 
         return audio::CallbackResult::OK;
     }
+
+
+    AudioEngine::AudioEngine() = default;
+    AudioEngine::~AudioEngine() = default;
 
 
     audio::ResultCode AudioEngine::InitializeAPI(audio::APIKind apiKind)
@@ -94,6 +129,9 @@ namespace quinte
         m_MonitorPorts.Left->AllocateBuffer();
         m_MonitorPorts.Right->AllocateBuffer();
 
+        m_Graph = memory::make_unique<ExecutionGraph>();
+        m_Graph->Build();
+
         m_Running.store(true);
 
         return startResult;
@@ -102,6 +140,9 @@ namespace quinte
 
     void AudioEngine::Stop()
     {
+        if (m_Impl->GetState() == audio::StreamState::Closed)
+            return;
+
         m_Running.store(false);
         m_MonitorPorts = {};
         m_HardwarePorts = {};

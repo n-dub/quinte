@@ -1,15 +1,17 @@
 ﻿#pragma once
 #include <Audio/Base.hpp>
-#include <Audio/Tracks/Clip.hpp>
+#include <Audio/Tracks/AudioClip.hpp>
 #include <Audio/Tracks/Fader.hpp>
+#include <Audio/Tracks/Playlist.hpp>
 #include <Core/String.hpp>
 
 namespace quinte
 {
     class Track final : public memory::RefCountedObjectBase
     {
-        audio::DataType m_InputDataType;
-        audio::DataType m_OutputDataType;
+        Playlist m_Playlist;
+        [[maybe_unused]] audio::DataType m_InputDataType;
+        [[maybe_unused]] audio::DataType m_OutputDataType;
         bool m_Monitored = false;
         bool m_RecordArmed = false;
         Fader m_Fader;
@@ -21,6 +23,11 @@ namespace quinte
             , m_OutputDataType(outputDataType)
             , m_Fader(outputDataType)
         {
+        }
+
+        [[nodiscard]] inline Playlist& GetPlaylist()
+        {
+            return m_Playlist;
         }
 
         [[nodiscard]] inline bool IsMonitored() const

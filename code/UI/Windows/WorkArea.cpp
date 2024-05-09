@@ -12,25 +12,6 @@ namespace quinte
     WorkArea::WorkArea()
     {
         m_pEditWindow = memory::make_unique<EditWindow>();
-
-        m_Tracks.push_back(TrackMixerView{
-            .pTrack = Rc<Track>::DefaultNew(audio::DataType::Audio, audio::DataType::Audio),
-            .ID = 0,
-            .Color = colors::kDarkRed,
-        });
-        m_Tracks.push_back(TrackMixerView{
-            .pTrack = Rc<Track>::DefaultNew(audio::DataType::Audio, audio::DataType::Audio),
-            .ID = 1,
-            .Color = colors::kDarkGreen,
-        });
-        m_Tracks.push_back(TrackMixerView{
-            .pTrack = Rc<Track>::DefaultNew(audio::DataType::Audio, audio::DataType::Audio),
-            .ID = 2,
-            .Color = colors::kRebeccaPurple,
-        });
-
-        m_Tracks[0].pTrack->SetName("Test Track");
-        m_Tracks[1].pTrack->SetName("Test 2");
     }
 
 
@@ -92,9 +73,23 @@ namespace quinte
             PopStyleVar(3);
         }
 
-        Button("Test");
-        SameLine();
-        Text("Some text");
+        {
+            Transport* pTransport = Interface<Transport>::Get();
+            if (pTransport->IsActuallyRolling())
+            {
+                if (Button(NF_FA_PAUSE))
+                    pTransport->RequestPause();
+            }
+            else
+            {
+                if (Button(NF_FA_PLAY))
+                    pTransport->RequestRoll();
+            }
+
+            SameLine();
+            if (Button(NF_MD_REWIND))
+                pTransport->SetPlayhead(0);
+        }
 
         const ImGuiID dockspaceID = GetID("MainDockspace");
         DockSpace(dockspaceID, { 0, 0 }, ImGuiDockNodeFlags_NoDockingInCentralNode);
@@ -216,8 +211,13 @@ namespace quinte
 
         if (Begin("Mix Window"))
         {
-            for (TrackMixerView& trackView : m_Tracks)
+            Session* pSession = Interface<Session>::Get();
+            TrackList& tracks = pSession->GetTrackList();
+
+            for (TrackInfo& trackInfo : tracks)
             {
+                TrackMixerView trackView{ .pTrack = trackInfo.pTrack, .ID = trackInfo.Color, .Color = trackInfo.Color };
+
                 if (trackView.ID > 0)
                     SameLine();
 

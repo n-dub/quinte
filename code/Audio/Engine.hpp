@@ -1,9 +1,9 @@
 ﻿#pragma once
+#include <Audio/AudioEngineEvents.hpp>
 #include <Audio/Base.hpp>
 #include <Audio/Ports/AudioPort.hpp>
-#include <Core/Interface.hpp>
 #include <Core/EventBus.hpp>
-#include <Audio/AudioEngineEvents.hpp>
+#include <Core/Interface.hpp>
 
 namespace quinte
 {
@@ -112,6 +112,13 @@ namespace quinte
             DeviceID OutputDevice;
             uint32_t BufferSize;
         };
+
+
+        struct EngineProcessInfo final
+        {
+            audio::TimePos64 StartTime;
+            audio::TimeRange32 LocalRange;
+        };
     } // namespace audio
 
 
@@ -136,17 +143,22 @@ namespace quinte
 
         virtual audio::APIKind GetKind() const = 0;
         virtual audio::StreamState GetState() const = 0;
+
         virtual size_t GetAudioBufferSize() const = 0;
+        virtual uint32_t GetSampleRate() const = 0;
     };
 
 
     class AudioEngine final : public Interface<AudioEngine>::Registrar
     {
+        friend class ExecutionGraph;
+
         EventBus<AudioEngineEvents> m_eventBus;
 
         memory::unique_ptr<IAudioAPI> m_Impl;
         size_t m_AudioBufferSize = 0;
 
+        memory::unique_ptr<ExecutionGraph> m_Graph;
         std::atomic<bool> m_Running = false;
 
         StereoPorts m_HardwarePorts;
@@ -159,6 +171,9 @@ namespace quinte
                                             audio::StreamStatus status);
 
     public:
+        AudioEngine();
+        ~AudioEngine();
+
         inline IAudioAPI* GetAPI() const
         {
             return m_Impl.get();

@@ -210,6 +210,12 @@ namespace quinte
     }
 
 
+    uint32_t AudioBackendBase::GetSampleRate() const
+    {
+        return m_StreamData.SampleRate;
+    }
+
+
     audio::ResultCode AudioBackendBase::OpenStream(audio::StreamOpenInfo& openInfo)
     {
         QU_Assert(m_StreamData.State == audio::StreamState::Closed);

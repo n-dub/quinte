@@ -8,9 +8,9 @@ namespace quinte
     {
         if (size > 0)
         {
+            m_Owning = true;
             Resize(size);
             Clear();
-            m_Owning = true;
             m_Silent = false;
         }
     }
@@ -27,10 +27,7 @@ namespace quinte
     void AudioBuffer::Resize(uint64_t size)
     {
         QU_AssertDebug(m_Owning);
-        if (m_pData && m_Capacity >= size)
-            return;
-
-        memory::DefaultFree(m_pData);
+        memory::SafeFree(m_pData);
         m_pData = memory::DefaultAlloc<float>(size * sizeof(float), kDataAlignment);
         m_Capacity = size;
         m_Silent = false;

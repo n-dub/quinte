@@ -4,15 +4,14 @@
 
 namespace quinte
 {
-    class TrackMixerView final
+    class TrackEditView final
     {
     public:
-        float MaxVolume = 1.0f;
         Rc<Track> pTrack;
 
         uint32_t ID = 0;
         uint32_t Color = 0;
 
-        bool Draw();
+        bool Draw(float width);
     };
 } // namespace quinte

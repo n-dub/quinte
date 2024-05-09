@@ -1,4 +1,5 @@
 ﻿#include <UI/Widgets/Common.hpp>
+#include <imgui_internal.h>
 #include <numbers>
 #include <numeric>
 
@@ -124,5 +125,22 @@ namespace quinte::ui
         }
 
         return false;
+    }
+
+
+    bool Splitter(bool splitVertically, float thickness, float* size1, float* size2, float minSize1, float minSize2,
+                  float splitterLongAxisSize)
+    {
+        using namespace ImGui;
+        ImGuiContext& g = *GImGui;
+        ImGuiWindow* window = g.CurrentWindow;
+        ImGuiID id = window->GetID("##Splitter");
+        ImRect bb;
+        bb.Min = window->DC.CursorPos + (splitVertically ? ImVec2(*size1, 0.0f) : ImVec2(0.0f, *size1));
+        bb.Max = bb.Min
+            + CalcItemSize(splitVertically ? ImVec2(thickness, splitterLongAxisSize) : ImVec2(splitterLongAxisSize, thickness),
+                           0.0f,
+                           0.0f);
+        return SplitterBehavior(bb, id, splitVertically ? ImGuiAxis_X : ImGuiAxis_Y, size1, size2, minSize1, minSize2, 0.0f);
     }
 } // namespace quinte::ui

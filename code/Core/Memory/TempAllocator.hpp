@@ -1,48 +1,43 @@
 ﻿#pragma once
 #include <Core/Core.hpp>
+#include <Core/Memory/LinearAllocator.hpp>
 
 namespace quinte::memory
 {
     class TempAllocator final
     {
-        struct Page final
-        {
-            Page* pNext = nullptr;
-        };
+        LinearAllocator m_ImplAllocator;
 
     public:
-        class Marker final
-        {
-            friend class TempAllocator;
-
-            Page* m_pPage = nullptr;
-            size_t m_Offset = sizeof(Page);
-        };
+        using Marker = LinearAllocator::Marker;
 
         inline static constexpr size_t kPageByteSize = 1024 * 1024;
 
-    private:
-        Page* m_pFirstPage = nullptr;
-        Marker m_CurrentMarker;
-
-        void NewPage();
-
-    public:
-        ~TempAllocator();
+        inline TempAllocator()
+            : m_ImplAllocator(kPageByteSize, VirtualMemoryResource::Get())
+        {
+        }
 
         static TempAllocator* GetForCurrentThread();
 
-        void* Allocate(size_t byteSize, size_t byteAlignment);
-        void Maintain();
+        inline void* Allocate(size_t byteSize, size_t byteAlignment)
+        {
+            return m_ImplAllocator.allocate(byteSize, byteAlignment);
+        }
+
+        inline void Maintain()
+        {
+            m_ImplAllocator.Maintain();
+        }
 
         inline Marker GetMarker() const
         {
-            return m_CurrentMarker;
+            return m_ImplAllocator.GetMarker();
         }
 
         inline void Restore(const Marker& marker)
         {
-            m_CurrentMarker = marker;
+            m_ImplAllocator.Restore(marker);
         }
     };
 
@@ -66,13 +61,12 @@ namespace quinte::memory
 
             const size_t dedicatedOffset = AlignUp(sizeof(DedicatedAllocation), byteAlignment);
             const size_t dedicatedSize = dedicatedOffset + byteSize;
-            pointer = memory::DefaultAlloc<void>(dedicatedSize);
 
-            auto* pDedicated = static_cast<DedicatedAllocation*>(pointer);
+            auto* pDedicated = memory::DefaultAlloc<DedicatedAllocation>(dedicatedSize, byteAlignment);
             pDedicated->pNext = m_pFirstDedicated;
             m_pFirstDedicated = pDedicated;
 
-            return static_cast<uint8_t*>(pointer) + dedicatedOffset;
+            return reinterpret_cast<uint8_t*>(pDedicated) + dedicatedOffset;
         }
 
         inline void do_deallocate(void*, size_t, size_t) override {}

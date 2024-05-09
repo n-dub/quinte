@@ -10,7 +10,6 @@ namespace quinte
     class WorkArea final
     {
         memory::unique_ptr<EditWindow> m_pEditWindow;
-        std::pmr::vector<TrackMixerView> m_Tracks;
 
         uint32_t m_SelectedInputDeviceIndex = 0;
         uint32_t m_SelectedOutputDeviceIndex = 0;

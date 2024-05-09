@@ -88,6 +88,11 @@ namespace quinte
         {
         }
 
+        [[nodiscard]] inline audio::DataType GetDataType() const
+        {
+            return m_DataType;
+        }
+
         [[nodiscard]] inline bool IsMuted() const
         {
             return m_Muted;
