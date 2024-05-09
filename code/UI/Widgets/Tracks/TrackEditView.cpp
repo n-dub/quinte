@@ -13,7 +13,7 @@ namespace quinte
         const IDScope idScope{ FixFmt32{ "##Track_", ID }.Data() };
 
         const float colorButtonWidth = GetFrameHeight();
-        const float height = GetFrameHeightWithSpacing() * 5.0f;
+        const float height = GetFrameHeightWithSpacing() * 3.0f;
 
         BeginGroup();
         ArrowButton("##CollapseArrow", ImGuiDir_Down);

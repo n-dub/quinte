@@ -20,7 +20,7 @@ namespace quinte
     {
         m_TrackList = {};
 
-        m_TrackList.AddTrack(Rc<Track>::DefaultNew(audio::DataType::Audio, audio::DataType::Audio), colors::kDarkRed);
+        m_TrackList.AddTrack(Rc<Track>::DefaultNew(audio::DataType::Audio, audio::DataType::Audio), colors::kAzure);
         m_TrackList.AddTrack(Rc<Track>::DefaultNew(audio::DataType::Audio, audio::DataType::Audio), colors::kDarkGreen);
         m_TrackList.AddTrack(Rc<Track>::DefaultNew(audio::DataType::Audio, audio::DataType::Audio), colors::kRebeccaPurple);
 

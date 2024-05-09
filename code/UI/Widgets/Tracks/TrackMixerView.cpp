@@ -103,9 +103,9 @@ namespace quinte
             SetItemTooltip(soloed ? "soloed" : "not soloed");
 
             {
-                const ColorScope colorBtn{ ImGuiCol_Button, Color };
-                const ColorScope colorHover{ ImGuiCol_ButtonHovered, Color };
-                const ColorScope colorActive{ ImGuiCol_ButtonActive, Color };
+                const ColorScope colorBtn{ ImGuiCol_Button, colors::Dim(Color, 0.7f) };
+                const ColorScope colorHover{ ImGuiCol_ButtonHovered, colors::Dim(Color, 0.7f) };
+                const ColorScope colorActive{ ImGuiCol_ButtonActive, colors::Dim(Color, 0.7f) };
                 const StyleScope borderStyle{ ImGuiStyleVar_FrameBorderSize, 1.0f };
 
                 SetCursorPosX(4.0f);

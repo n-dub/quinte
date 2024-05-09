@@ -10,6 +10,11 @@ namespace quinte
     {
         float m_LeftPanelSize = 150.0f;
 
+        int64_t m_TimelineStart = 0;
+        double m_SamplesPerPixel = 100.0;
+
+        void DrawTrackLane(TrackInfo& trackInfo);
+
     public:
         EditWindow();
 

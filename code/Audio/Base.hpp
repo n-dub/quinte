@@ -22,6 +22,20 @@ namespace quinte::audio
         }
 
         inline friend auto operator<=>(TimePos lhs, TimePos rhs) = default;
+
+        template<std::unsigned_integral U>
+        [[nodiscard]] inline friend auto operator+(const TimePos& lhs, const TimePos<U>& rhs)
+            -> std::conditional_t<(sizeof(T) > sizeof(U)), TimePos<T>, TimePos<U>>
+        {
+            return lhs.SampleIndex + rhs.SampleIndex;
+        }
+
+        template<std::unsigned_integral U>
+        [[nodiscard]] inline friend auto operator-(const TimePos& lhs, const TimePos<U>& rhs)
+            -> std::conditional_t<(sizeof(T) > sizeof(U)), TimePos<T>, TimePos<U>>
+        {
+            return lhs.SampleIndex - rhs.SampleIndex;
+        }
     };
 
     template<std::unsigned_integral T>
