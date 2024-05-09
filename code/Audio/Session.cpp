@@ -7,6 +7,19 @@
 
 namespace quinte
 {
+    static AudioBuffer* GenerateSineWave(float seconds, uint32_t frequency, uint32_t sampleRate)
+    {
+        AudioBuffer* pResult = Rc<AudioBuffer>::DefaultNew(static_cast<uint32_t>(sampleRate * seconds));
+
+        for (uint32_t sampleIndex = 0; sampleIndex < pResult->GetCapacity(); ++sampleIndex)
+        {
+            pResult->Data()[sampleIndex] = 0.9f * std::sin(2 * std::numbers::pi_v<float> * frequency * sampleIndex / sampleRate);
+        }
+
+        return pResult;
+    }
+
+
     Session::Session() {}
 
 
@@ -27,23 +40,21 @@ namespace quinte
         m_TrackList[0].pTrack->SetName("Sine wave");
         m_TrackList[1].pTrack->SetName("Test 2");
 
-        Playlist& testPlaylist = m_TrackList[0].pTrack->GetPlaylist();
-        AudioBuffer* pTestBuffer = Rc<AudioBuffer>::DefaultNew(40000);
-
-        const float kFrequency = 440.0f;
         AudioEngine* pEngine = Interface<AudioEngine>::Get();
         const uint32_t sampleRate = pEngine->GetAPI()->GetSampleRate();
 
-        for (uint32_t sampleIndex = 0; sampleIndex < pTestBuffer->GetCapacity(); ++sampleIndex)
-        {
-            pTestBuffer->Data()[sampleIndex] =
-                0.9f * std::sin(2 * std::numbers::pi_v<float> * kFrequency * sampleIndex / sampleRate);
-        }
+        BufferAudioSource* pTestSource1 = Rc<BufferAudioSource>::DefaultNew(GenerateSineWave(1.0f, 440, sampleRate));
+        BufferAudioSource* pTestSource2 = Rc<BufferAudioSource>::DefaultNew(GenerateSineWave(0.5f, 880, sampleRate));
 
-        BufferAudioSource* pTestSource = Rc<BufferAudioSource>::DefaultNew(pTestBuffer);
+        Playlist& playlist0 = m_TrackList[0].pTrack->GetPlaylist();
+        AudioClip testClip0{ "Sine Wave 440Hz", pTestSource1, sampleRate * 0.5f };
+        playlist0.InsertClip(std::move(testClip0));
+        AudioClip testClip1{ "Sine Wave 440Hz", pTestSource1, sampleRate * 1.5f };
+        playlist0.InsertClip(std::move(testClip1));
 
-        AudioClip testClip{ pTestSource, 40000 };
-        testPlaylist.InsertClip(std::move(testClip));
+        Playlist& playlist2 = m_TrackList[2].pTrack->GetPlaylist();
+        AudioClip testClip2{ "Sine Wave 880Hz", pTestSource2, sampleRate * 0.7f };
+        playlist2.InsertClip(std::move(testClip2));
 
         m_pPortManager = memory::make_unique<PortManager>();
     }

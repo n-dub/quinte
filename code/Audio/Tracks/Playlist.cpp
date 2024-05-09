@@ -7,7 +7,7 @@ namespace quinte
     {
         auto iter = std::lower_bound(
             m_AudioClips.begin(), m_AudioClips.end(), clip.GetPosition(), [](const AudioClip& lhs, audio::TimePos64 rhs) {
-                return lhs.GetEndPosition() < rhs;
+                return lhs.GetPosition() < rhs;
             });
 
         m_AudioClips.insert(iter, std::move(clip));

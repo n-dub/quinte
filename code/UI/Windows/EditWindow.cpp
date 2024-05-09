@@ -42,7 +42,9 @@ namespace quinte
             const ImVec2 clipRectMax{ static_cast<float>(pos.x + clipEndPos / m_SamplesPerPixel), pos.y + 4.0f + frameHeight };
             pDrawList->PushClipRect(rectMin, clipRectMax, true);
             pDrawList->AddRectFilled(rectMin, rectMax, colors::Dim(trackInfo.Color, 0.7f), 4.0f);
-            pDrawList->AddText(rectMin + style.FramePadding, colors::kWhite, "Test clip");
+
+            const StringSlice clipName = clip.GetName();
+            pDrawList->AddText(rectMin + style.FramePadding, colors::kWhite, clipName.Data(), clipName.Data() + clipName.Size());
             pDrawList->PopClipRect();
 
             pDrawList->AddRect(rectMin, rectMax, colors::kWhite, 4.0f, 0, 2.0f);

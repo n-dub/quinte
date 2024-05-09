@@ -1,11 +1,13 @@
 ﻿#pragma once
 #include <Audio/Base.hpp>
 #include <Audio/Sources/AudioSource.hpp>
+#include <Core/String.hpp>
 
 namespace quinte
 {
     class AudioClip final
     {
+        String m_Name;
         Rc<AudioSource> m_pSource;
         audio::TimePos64 m_Position;
         audio::TimeRange32 m_SourceRange;
@@ -25,6 +27,14 @@ namespace quinte
         //
 
     public:
+        inline AudioClip(StringSlice name, AudioSource* pSource, audio::TimePos64 firstSamplePosition)
+            : m_Name(name)
+            , m_pSource(pSource)
+            , m_Position(firstSamplePosition)
+            , m_SourceRange(0, pSource->GetLength())
+        {
+        }
+
         inline AudioClip(AudioSource* pSource, audio::TimePos64 firstSamplePosition)
             : m_pSource(pSource)
             , m_Position(firstSamplePosition)
@@ -38,6 +48,11 @@ namespace quinte
             const uint64_t offset = range.GetFirstSampleIndex() - m_Position.GetSampleIndex();
             const uint64_t sourceOffset = m_SourceRange.GetFirstSampleIndex() + offset;
             return m_pSource->Read(pDestination, sourceOffset, range.GetLengthInSamples());
+        }
+
+        [[nodiscard]] inline StringSlice GetName() const
+        {
+            return m_Name;
         }
 
         //! \brief Position of the clip on the session timeline.

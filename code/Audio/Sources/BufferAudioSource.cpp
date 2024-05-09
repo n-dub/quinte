@@ -5,7 +5,7 @@ namespace quinte
     uint64_t BufferAudioSource::ReadImpl(float* pDestination, uint64_t firstSampleIndex, uint64_t sampleCount)
     {
         const uint64_t actualSampleCount = Min(firstSampleIndex + sampleCount, m_Length) - firstSampleIndex;
-        memory::Copy(pDestination, m_pBuffer->Data(), actualSampleCount);
+        memory::Copy(pDestination, m_pBuffer->Data() + firstSampleIndex, actualSampleCount);
         return actualSampleCount;
     }
 
