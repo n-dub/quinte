@@ -14,7 +14,14 @@ namespace quinte
         : public Interface<Session>::Registrar
         , public EventBus<AudioEngineEvents>::Handler
     {
+        friend class ExecutionGraph;
+
         memory::unique_ptr<PortManager> m_pPortManager;
+
+        StereoPorts m_MasterInputPorts;
+        StereoPorts m_MasterOutputPorts;
+        Rc<Track> m_pMasterTrack;
+
         TrackList m_TrackList;
 
         void OnAudioStreamStarted() override;
@@ -23,6 +30,9 @@ namespace quinte
     public:
         Session();
         ~Session();
+
+        Track* CreateTrack(audio::DataType inputDataType = audio::DataType::Audio,
+                           audio::DataType outputDataType = audio::DataType::Audio);
 
         inline TrackList& GetTrackList()
         {

@@ -32,7 +32,7 @@ namespace quinte
             RefCountedObjectBase() = default;
             virtual ~RefCountedObjectBase() = default;
 
-            inline uint32_t GetRefCount() const
+            [[nodiscard]] inline uint32_t GetRefCount() const
             {
                 return m_RefCount.load(std::memory_order_relaxed);
             }
@@ -217,13 +217,13 @@ namespace quinte
         }
 
         //! \brief Get pointer to the stored pointer.
-        inline T* const* GetAddressOf() const
+        [[nodiscard]] inline T* const* GetAddressOf() const
         {
             return &m_pObject;
         }
 
         //! \brief Get pointer to the stored pointer.
-        inline T** GetAddressOf()
+        [[nodiscard]] inline T** GetAddressOf()
         {
             return &m_pObject;
         }
@@ -231,7 +231,7 @@ namespace quinte
         //! \brief Release a reference and get pointer to the stored pointer.
         //!
         //! It is the same as using unary '&' operator.
-        inline T** ReleaseAndGetAddressOf()
+        [[nodiscard]] inline T** ReleaseAndGetAddressOf()
         {
             InternalRelease();
             return &m_pObject;
@@ -253,7 +253,7 @@ namespace quinte
         }
 
         //! \brief Get underlying raw pointer.
-        inline T* Get() const
+        [[nodiscard]] inline T* Get() const
         {
             return m_pObject;
         }
@@ -279,7 +279,7 @@ namespace quinte
         }
 
         template<class... TArgs>
-        requires std::constructible_from<T, TArgs...>
+        requires std::constructible_from<T, TArgs...> && std::derived_from<T, memory::RefCountedObjectBase>
         inline static T* New(std::pmr::memory_resource* pAllocator, TArgs&&... args)
         {
             T* ptr = new (pAllocator->allocate(sizeof(T), memory::kDefaultAlignment)) T(std::forward<TArgs>(args)...);
@@ -288,7 +288,7 @@ namespace quinte
         }
 
         template<class... TArgs>
-        requires std::constructible_from<T, TArgs...>
+        requires std::constructible_from<T, TArgs...> && std::derived_from<T, memory::RefCountedObjectBase>
         inline static T* DefaultNew(TArgs&&... args)
         {
             std::pmr::memory_resource* pAllocator = std::pmr::get_default_resource();

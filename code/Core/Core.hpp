@@ -8,6 +8,7 @@
 #include <cassert>
 #include <concepts>
 #include <format>
+#include <iterator>
 #include <span>
 #include <string_view>
 #include <type_traits>
@@ -17,24 +18,73 @@
 
 #if QU_DEBUG
 #    define QU_Assert(expr) assert(expr)
-#    define QU_AssertDebug(expr) assert(expr)
 #    define QU_AssertMsg(expr, msg) assert(expr)
+#    define QU_AssertDebug(expr) assert(expr)
 #    define QU_AssertDebugMsg(expr, msg) assert(expr)
 #else
 #    define QU_Assert(expr) assert(expr)
-#    define QU_AssertDebug(expr) QU_Unused(expr)
 #    define QU_AssertMsg(expr, msg) assert(expr)
-#    define QU_AssertDebugMsg(expr, msg) QU_Unused(expr)
+#    define QU_AssertDebug(expr)                                                                                                 \
+        do                                                                                                                       \
+        {                                                                                                                        \
+        }                                                                                                                        \
+        while (0)
+#    define QU_AssertDebugMsg(expr, msg)                                                                                         \
+        do                                                                                                                       \
+        {                                                                                                                        \
+        }                                                                                                                        \
+        while (0)
 #endif
 
 
 namespace quinte
 {
-    //! \brief Find ceiling of x divided by y.
-    template<std::unsigned_integral T1, std::unsigned_integral T2>
-    inline auto CeilDivide(T1 x, T2 y) -> decltype(x / y)
+    namespace detail
     {
-        return (x + y - 1) / y;
+        template<class TContainer, class TElement>
+        concept Container = requires(TContainer& t) {
+            {
+                *t.begin()
+            } -> std::convertible_to<TElement>;
+            {
+                *t.end()
+            } -> std::convertible_to<TElement>;
+        };
+    }
+
+
+    inline constexpr size_t InvalidIndex = std::numeric_limits<size_t>::max();
+
+
+    template<class TContainer, class TElement>
+    requires detail::Container<TContainer, TElement>
+    inline size_t FindIndex(const TContainer& container, const TElement& element)
+    {
+        size_t result = 0;
+        for (const TElement& curr : container)
+        {
+            if (curr == element)
+                return result;
+            ++result;
+        }
+
+        return InvalidIndex;
+    }
+
+
+    template<class TContainer, class TElement, class TFunc>
+    requires detail::Container<TContainer, TElement> && std::predicate<TFunc, TElement>
+    inline size_t FindIndexIf(const TContainer& container, TFunc&& pred)
+    {
+        size_t result = 0;
+        for (const TElement& curr : container)
+        {
+            if (pred(curr))
+                return result;
+            ++result;
+        }
+
+        return InvalidIndex;
     }
 
 
@@ -105,6 +155,14 @@ namespace quinte
     }
 
 
+    template<class T>
+    requires std::is_enum_v<T>
+    inline constexpr auto enum_cast(T value) -> std::underlying_type_t<T>
+    {
+        return static_cast<std::underlying_type_t<T>>(value);
+    }
+
+
     //! \brief Create a bitmask.
     //!
     //! \param bitCount  - The number of ones in the created mask.
@@ -115,6 +173,16 @@ namespace quinte
         auto typeBitCount = sizeof(T) * 8;
         auto mask = bitCount == typeBitCount ? static_cast<T>(-1) : ((1 << bitCount) - 1);
         return static_cast<T>(mask << leftShift);
+    }
+
+
+    template<class T>
+    requires std::is_enum_v<T>
+    inline constexpr T SetFlag(T source, T flag, bool value)
+    {
+        if (value)
+            return static_cast<T>(enum_cast(source) | enum_cast(flag));
+        return static_cast<T>(enum_cast(source) & ~enum_cast(flag));
     }
 
 
@@ -221,14 +289,6 @@ namespace quinte
     } // namespace detail
 
 #define QU_Defer const auto QU_UNIQUE_NAME(DeferredObject) = detail::DeferOperatorImplType{} += [&]
-
-
-    template<class T>
-    requires std::is_enum_v<T>
-    inline constexpr auto enum_cast(T value) -> std::underlying_type_t<T>
-    {
-        return static_cast<std::underlying_type_t<T>>(value);
-    }
 } // namespace quinte
 
 

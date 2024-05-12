@@ -123,6 +123,10 @@ namespace quinte
         uint32_t GetSampleRate() const override;
 
         audio::ResultCode OpenStream(audio::StreamOpenInfo& openInfo) override;
+
+        audio::DeviceID GetSelectedInputDevice() const override;
+        audio::DeviceID GetSelectedOutputDevice() const override;
+        const audio::DeviceDesc& GetDeviceDesc(audio::DeviceID deviceID) const override;
         std::span<const audio::DeviceDesc> GetDevices() const override;
         audio::StreamState GetState() const override;
     };

@@ -42,12 +42,13 @@ namespace quinte
         {
         }
 
-        [[nodiscard]] inline uint64_t Read(float* pDestination, audio::TimeRange64 range) const
+        [[nodiscard]] inline uint64_t Read(AudioBufferView* pDestination, uint64_t dstOffset, audio::TimeRange64 range,
+                                           uint32_t channelIndex) const
         {
             QU_AssertDebug(range.GetFirstSampleIndex() >= m_Position.GetSampleIndex());
             const uint64_t offset = range.GetFirstSampleIndex() - m_Position.GetSampleIndex();
             const uint64_t sourceOffset = m_SourceRange.GetFirstSampleIndex() + offset;
-            return m_pSource->Read(pDestination, sourceOffset, range.GetLengthInSamples());
+            return m_pSource->Read(pDestination, sourceOffset, dstOffset, range.GetLengthInSamples(), channelIndex);
         }
 
         [[nodiscard]] inline StringSlice GetName() const

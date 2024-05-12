@@ -129,6 +129,9 @@ namespace quinte
 
         virtual audio::ResultCode UpdateDeviceList() = 0;
 
+        virtual audio::DeviceID GetSelectedInputDevice() const = 0;
+        virtual audio::DeviceID GetSelectedOutputDevice() const = 0;
+        virtual const audio::DeviceDesc& GetDeviceDesc(audio::DeviceID deviceID) const = 0;
         virtual std::span<const audio::DeviceDesc> GetDevices() const = 0;
 
         virtual audio::DeviceID GetDefautInputDevice() const = 0;
@@ -149,6 +152,8 @@ namespace quinte
     };
 
 
+    class ExecutionGraph;
+
     class AudioEngine final : public Interface<AudioEngine>::Registrar
     {
         friend class ExecutionGraph;
@@ -160,9 +165,6 @@ namespace quinte
 
         memory::unique_ptr<ExecutionGraph> m_Graph;
         std::atomic<bool> m_Running = false;
-
-        StereoPorts m_HardwarePorts;
-        StereoPorts m_MonitorPorts;
 
         static audio::CallbackResult AudioCallbackImpl(void* pOutputBuffer, void* pInputBuffer, uint32_t frameCount,
                                                        double streamTime, audio::StreamStatus status, void* pUserData);

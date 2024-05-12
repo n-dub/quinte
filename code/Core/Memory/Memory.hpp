@@ -417,7 +417,7 @@ namespace quinte::memory
 
         [[nodiscard]] inline T* allocate(size_t n) const
         {
-            return static_cast<T*>(detail::DefaultAlloc(n));
+            return static_cast<T*>(detail::DefaultAlloc(n * sizeof(T)));
         }
 
         inline void deallocate(T* ptr, size_t) const

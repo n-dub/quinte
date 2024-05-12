@@ -9,8 +9,8 @@ namespace quinte
         Rc<AudioBuffer> m_pBuffer;
 
     protected:
-        uint64_t ReadImpl(float* pDestination, uint64_t firstSampleIndex, uint64_t sampleCount) override;
-        uint64_t WriteImpl(const float* pSource, uint64_t firstSampleIndex, uint64_t sampleCount) override;
+        uint64_t ReadImpl(AudioBufferView* pDestination, uint64_t firstSampleIndex, uint64_t dstOffset,
+                          uint64_t sampleCount) override;
 
     public:
         inline BufferAudioSource(AudioBuffer* pSourceBuffer)

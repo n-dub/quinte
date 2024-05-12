@@ -32,10 +32,7 @@ namespace quinte
 
     void MemoryPool::do_deallocate(void* ptr, size_t, size_t)
     {
-#if QU_DEBUG
         QU_AssertDebug(m_AllocationCount-- > 0);
-#endif
-
         *static_cast<void**>(ptr) = m_pFreeList;
         m_pFreeList = ptr;
     }

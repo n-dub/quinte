@@ -77,8 +77,8 @@ namespace quinte
     class Fader final
     {
         audio::DataType m_DataType;
-        bool m_Muted = false;
-        bool m_Soloed = false;
+        std::atomic<bool> m_Muted = false;
+        std::atomic<bool> m_Soloed = false;
         std::atomic<audio::GainValue> m_Gain = audio::GainValue{ 1.0f };
         std::atomic<audio::PanValue> m_Pan = audio::PanValue{ audio::PanValue::Pos::Center };
 

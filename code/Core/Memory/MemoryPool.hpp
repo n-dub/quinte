@@ -53,9 +53,7 @@ namespace quinte
 
         inline void FreePages()
         {
-#if QU_DEBUG
             QU_AssertDebug(m_AllocationCount == 0);
-#endif
 
             Page* pPage = m_pPageList;
             while (pPage)

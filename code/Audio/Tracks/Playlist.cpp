@@ -14,7 +14,7 @@ namespace quinte
     }
 
 
-    void Playlist::Read(float* pDestination, audio::TimeRange64 range) const
+    void Playlist::Read(AudioBufferView* pDestination, uint64_t dstOffset, audio::TimeRange64 range, uint32_t channelIndex) const
     {
         auto iter = std::lower_bound(
             m_AudioClips.begin(), m_AudioClips.end(), range.StartPos, [](const AudioClip& lhs, audio::TimePos64 rhs) {
@@ -25,7 +25,7 @@ namespace quinte
                && iter->GetEndPosition() >= range.GetFirstSampleIndex())
         {
             // TODO: zero-out the rest
-            [[maybe_unused]] const auto ignore = iter->Read(pDestination, range);
+            [[maybe_unused]] const auto ignore = iter->Read(pDestination, dstOffset, range, channelIndex);
             ++iter;
         }
     }

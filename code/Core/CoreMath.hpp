@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <Core/Base.hpp>
 #include <cmath>
 #include <concepts>
@@ -8,6 +8,14 @@
 
 namespace quinte
 {
+    //! \brief Find ceiling of x divided by y.
+    template<std::unsigned_integral T1, std::unsigned_integral T2>
+    inline auto CeilDivide(T1 x, T2 y) -> decltype(x / y)
+    {
+        return (x + y - 1) / y;
+    }
+
+
     template<std::regular T>
     inline constexpr T Max(const T& a, const T& b)
     {

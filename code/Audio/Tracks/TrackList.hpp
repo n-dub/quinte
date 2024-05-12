@@ -76,6 +76,11 @@ namespace quinte
             return m_Tracks[m_TracksOrder[index]];
         }
 
+        inline const TrackInfo& operator[](size_t index) const
+        {
+            return m_Tracks[m_TracksOrder[index]];
+        }
+
         inline void AddTrack(Track* pTrack, uint32_t trackColor)
         {
             const TrackInfo trackInfo{ .pTrack = pTrack, .ID = m_CurrentTrackID++, .Color = trackColor };
@@ -83,7 +88,17 @@ namespace quinte
             m_Tracks.push_back(trackInfo);
         }
 
-        [[nodiscard]] inline size_t Size() const
+        [[nodiscard]] inline TrackInfo& back()
+        {
+            return m_Tracks[m_TracksOrder.back()];
+        }
+
+        [[nodiscard]] inline const TrackInfo& back() const
+        {
+            return m_Tracks[m_TracksOrder.back()];
+        }
+
+        [[nodiscard]] inline size_t size() const
         {
             return m_Tracks.size();
         }

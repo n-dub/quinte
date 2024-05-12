@@ -29,39 +29,72 @@ namespace quinte
     }
 
 
+    Track* Session::CreateTrack(audio::DataType inputDataType, audio::DataType outputDataType)
+    {
+        constexpr uint32_t kTrackColors[] = { colors::kAzure, colors::kDarkGreen, colors::kRebeccaPurple };
+        m_TrackList.AddTrack(Rc<Track>::DefaultNew(inputDataType, outputDataType),
+                             kTrackColors[m_TrackList.size() % std::size(kTrackColors)]);
+
+        Track* pTrack = m_TrackList.back().pTrack.Get();
+        pTrack->AddSource(0, m_pPortManager->GetHardwarePorts()[0].Get());
+        m_pMasterTrack->AddSource(0, pTrack->GetOutputPorts()[0].Get());
+        m_pMasterTrack->AddSource(1, pTrack->GetOutputPorts()[1].Get());
+        return pTrack;
+    }
+
+
     void Session::OnAudioStreamStarted()
     {
-        m_TrackList = {};
+        // Here we hard-code some tracks, clips, etc. for testing purposes.
+        // Later this data will be loaded from a session file and edited by users.
 
-        m_TrackList.AddTrack(Rc<Track>::DefaultNew(audio::DataType::Audio, audio::DataType::Audio), colors::kAzure);
-        m_TrackList.AddTrack(Rc<Track>::DefaultNew(audio::DataType::Audio, audio::DataType::Audio), colors::kDarkGreen);
-        m_TrackList.AddTrack(Rc<Track>::DefaultNew(audio::DataType::Audio, audio::DataType::Audio), colors::kRebeccaPurple);
+        m_pPortManager = memory::make_unique<PortManager>();
+
+        const StereoPorts& monitorPorts = m_pPortManager->GetMonitorPorts();
+
+        const audio::PortDesc masterInPortsDesc{ .Kind = audio::PortKind::Track, .Direction = audio::DataDirection::Input };
+        m_MasterInputPorts = StereoPorts::Create(masterInPortsDesc);
+        m_MasterInputPorts.Left->AllocateBuffer();
+        m_MasterInputPorts.Right->AllocateBuffer();
+
+        const audio::PortDesc masterOutPortsDesc{ .Kind = audio::PortKind::Track, .Direction = audio::DataDirection::Output };
+        m_MasterOutputPorts = StereoPorts::Create(masterOutPortsDesc);
+        m_MasterOutputPorts.Left->AllocateBuffer();
+        m_MasterOutputPorts.Right->AllocateBuffer();
+
+        m_pPortManager->ConnectPorts(m_MasterOutputPorts.Left.Get(), monitorPorts.Left.Get());
+        m_pPortManager->ConnectPorts(m_MasterOutputPorts.Right.Get(), monitorPorts.Right.Get());
+
+        m_pMasterTrack = Rc<Track>::DefaultNew(Track::MasterConstruct{}, m_MasterInputPorts, m_MasterOutputPorts);
+
+        m_TrackList = {};
+        CreateTrack();
+        CreateTrack();
+        CreateTrack();
 
         m_TrackList[0].pTrack->SetName("Sine wave");
         m_TrackList[1].pTrack->SetName("Test 2");
 
-        AudioEngine* pEngine = Interface<AudioEngine>::Get();
-        const uint32_t sampleRate = pEngine->GetAPI()->GetSampleRate();
+        const uint32_t sampleRate = Interface<AudioEngine>::Get()->GetAPI()->GetSampleRate();
 
         BufferAudioSource* pTestSource1 = Rc<BufferAudioSource>::DefaultNew(GenerateSineWave(1.0f, 440, sampleRate));
         BufferAudioSource* pTestSource2 = Rc<BufferAudioSource>::DefaultNew(GenerateSineWave(0.5f, 880, sampleRate));
 
         Playlist& playlist0 = m_TrackList[0].pTrack->GetPlaylist();
-        AudioClip testClip0{ "Sine Wave 440Hz", pTestSource1, sampleRate * 0.5f };
-        playlist0.InsertClip(std::move(testClip0));
-        AudioClip testClip1{ "Sine Wave 440Hz", pTestSource1, sampleRate * 1.5f };
-        playlist0.InsertClip(std::move(testClip1));
+        playlist0.InsertClip(AudioClip{ "Sine Wave 440Hz", pTestSource1, sampleRate * 0.5f });
+        playlist0.InsertClip(AudioClip{ "Sine Wave 440Hz", pTestSource1, sampleRate * 1.5f });
 
         Playlist& playlist2 = m_TrackList[2].pTrack->GetPlaylist();
-        AudioClip testClip2{ "Sine Wave 880Hz", pTestSource2, sampleRate * 0.7f };
-        playlist2.InsertClip(std::move(testClip2));
-
-        m_pPortManager = memory::make_unique<PortManager>();
+        playlist2.InsertClip(AudioClip{ "Sine Wave 880Hz", pTestSource2, sampleRate * 0.7f });
     }
 
 
     void Session::OnAudioStreamStopped()
     {
+        m_TrackList = {};
+        m_MasterInputPorts = {};
+        m_MasterOutputPorts = {};
+        m_pMasterTrack.Reset();
         m_pPortManager.reset();
     }
 } // namespace quinte

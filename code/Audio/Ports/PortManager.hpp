@@ -1,57 +1,13 @@
 ﻿#pragma once
 #include <Audio/Base.hpp>
 #include <Audio/Buffers/AudioBufferView.hpp>
-#include <Core/Memory/MemoryPool.hpp>
+#include <Audio/Ports/AudioPort.hpp>
 #include <Core/Interface.hpp>
+#include <Core/Memory/MemoryPool.hpp>
 #include <unordered_map>
 
 namespace quinte
 {
-    namespace audio
-    {
-        enum class PortKind : uint8_t
-        {
-            Hardware,
-            Track,
-            Plugin,
-        };
-
-
-        enum class PortFlags : uint8_t
-        {
-            None = 0,
-
-            StereoLeft = 1 << 0,
-            StereoRight = 1 << 1,
-
-            All = StereoLeft | StereoRight,
-        };
-
-
-        struct PortDesc final
-        {
-            PortKind Kind;
-            DataDirection Direction;
-            PortFlags Flags;
-        };
-
-
-        struct PortHandle : TypedHandle<PortHandle, uint32_t>
-        {
-        };
-
-
-        struct PortConnection final
-        {
-            PortHandle Source;
-            PortHandle Destination;
-        };
-    } // namespace audio
-
-
-    class Port;
-
-
     class PortManager final : public Interface<PortManager>::Registrar
     {
         friend class Port;
@@ -63,12 +19,10 @@ namespace quinte
         size_t m_AudioBufferSize;
         std::pmr::unordered_map<uint32_t, Port*, Hasher<uint32_t>> m_PortHandleMap;
 
-        uint32_t m_currentPortIndex = 0;
+        uint32_t m_CurrentPortIndex = 0;
 
-        inline uint32_t GetUniquePortID()
-        {
-            return m_currentPortIndex++;
-        }
+        SmallVector<Rc<AudioPort>> m_HardwarePorts;
+        StereoPorts m_MonitorPorts;
 
         void DeletePort(Port* pPort);
 
@@ -85,8 +39,29 @@ namespace quinte
 
     public:
         PortManager();
+        ~PortManager() = default;
+
+        std::span<const Rc<AudioPort>> GetHardwarePorts() const;
+        const StereoPorts& GetMonitorPorts() const;
 
         AudioPort* NewAudioPort(const audio::PortDesc& desc);
+
+        void ConnectPorts(Port* pSource, Port* pDestination);
+
+        inline void ConnectPorts(audio::PortHandle source, Port* pDestination)
+        {
+            ConnectPorts(FindPortByHandle(source), pDestination);
+        }
+
+        inline void ConnectPorts(Port* pSource, audio::PortHandle destination)
+        {
+            ConnectPorts(pSource, FindPortByHandle(destination));
+        }
+
+        inline void ConnectPorts(audio::PortHandle source, audio::PortHandle destination)
+        {
+            ConnectPorts(FindPortByHandle(source), FindPortByHandle(destination));
+        }
 
         inline Port* FindPortByHandle(audio::PortHandle handle) const
         {

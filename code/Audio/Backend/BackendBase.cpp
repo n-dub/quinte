@@ -271,6 +271,24 @@ namespace quinte
     }
 
 
+    audio::DeviceID AudioBackendBase::GetSelectedInputDevice() const
+    {
+        return m_StreamData.DeviceID[enum_cast(BackendStreamMode::Input)];
+    }
+
+
+    audio::DeviceID AudioBackendBase::GetSelectedOutputDevice() const
+    {
+        return m_StreamData.DeviceID[enum_cast(BackendStreamMode::Output)];
+    }
+
+
+    const audio::DeviceDesc& AudioBackendBase::GetDeviceDesc(audio::DeviceID deviceID) const
+    {
+        return m_Devices[deviceID.Value];
+    }
+
+
     std::span<const audio::DeviceDesc> AudioBackendBase::GetDevices() const
     {
         return m_Devices;

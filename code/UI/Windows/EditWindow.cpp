@@ -87,7 +87,7 @@ namespace quinte
 
         if (BeginChild("##EditWindowRightPanel", { size2, 0 }))
         {
-            for (uint32_t trackIndex = 0; trackIndex < tracks.Size(); ++trackIndex)
+            for (uint32_t trackIndex = 0; trackIndex < tracks.size(); ++trackIndex)
             {
                 SetCursorPosY(yOffsets[trackIndex]);
                 DrawTrackLane(tracks[trackIndex]);

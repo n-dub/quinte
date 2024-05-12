@@ -20,6 +20,7 @@
     Audio/Buffers/BufferView.hpp
     Audio/Ports/AudioPort.hpp
     Audio/Ports/Port.hpp
+    Audio/Ports/Port.cpp
     Audio/Ports/PortManager.hpp
     Audio/Ports/PortManager.cpp
     Audio/Sources/AudioSource.hpp

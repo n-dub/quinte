@@ -16,6 +16,8 @@ namespace quinte
         std::pmr::vector<ExecutionGraphNode*> m_InitialNodes;
         std::pmr::vector<ExecutionGraphNode*> m_AllNodes;
 
+        void ProcessNode(const audio::EngineProcessInfo& processInfo, ExecutionGraphNode* pNode);
+
     public:
         ~ExecutionGraph();
 

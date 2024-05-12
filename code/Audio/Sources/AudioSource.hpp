@@ -3,6 +3,9 @@
 
 namespace quinte
 {
+    class AudioBufferView;
+
+
     class AudioSource : public BaseSource
     {
     protected:
@@ -18,8 +21,8 @@ namespace quinte
             QU_AssertMsg(channelCount == 1, "not implemented");
         }
 
-        virtual uint64_t ReadImpl(float* pDestination, uint64_t firstSampleIndex, uint64_t sampleCount) = 0;
-        virtual uint64_t WriteImpl(const float* pSource, uint64_t firstSampleIndex, uint64_t sampleCount) = 0;
+        virtual uint64_t ReadImpl(AudioBufferView* pDestination, uint64_t firstSampleIndex, uint64_t dstOffset,
+                                  uint64_t sampleCount) = 0;
 
     public:
         [[nodiscard]] inline uint64_t GetLength() const
@@ -27,19 +30,12 @@ namespace quinte
             return m_Length;
         }
 
-        [[nodiscard]] inline uint64_t Read(float* pDestination, uint64_t firstSampleIndex, uint64_t sampleCount)
+        [[nodiscard]] inline uint64_t Read(AudioBufferView* pDestination, uint64_t firstSampleIndex, uint64_t dstOffset,
+                                           uint64_t sampleCount, uint32_t channelIndex)
         {
             const std::lock_guard lock{ m_Mutex };
-            return ReadImpl(pDestination, firstSampleIndex, sampleCount)
-                + ReadImpl(pDestination + sampleCount, firstSampleIndex, sampleCount);
-        }
-
-        [[nodiscard]] inline uint64_t Write(const float* pSource, uint64_t firstSampleIndex, uint64_t sampleCount)
-        {
-            QU_Unused(pSource);
-            QU_Unused(firstSampleIndex);
-            QU_Unused(sampleCount);
-            QU_AssertMsg(false, "not implemented");
+            if (channelIndex == 0)
+                return ReadImpl(pDestination, firstSampleIndex, dstOffset, sampleCount);
             return 0;
         }
     };

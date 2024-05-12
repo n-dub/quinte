@@ -119,7 +119,10 @@ namespace quinte
         QU_Assert(srcOffset + length <= pSourceBuffer->GetCapacity());
 
         if (pSourceBuffer->IsSilent() || gain == 0.0f)
+        {
+            Clear(destOffset, length);
             return;
+        }
 
         const float* pSource = static_cast<const AudioBufferView*>(pSourceBuffer)->m_pData;
         float* pDestination = m_pData;
@@ -136,7 +139,10 @@ namespace quinte
         QU_Assert(m_Capacity >= destOffset + length);
 
         if (gain == 0.0f)
+        {
+            Clear(destOffset, length);
             return;
+        }
 
         detail::MixBuffersImpl(m_pData + destOffset, pSource, gain, length);
         m_Silent = false;

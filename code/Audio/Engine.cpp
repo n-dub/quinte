@@ -1,6 +1,6 @@
-﻿#include "Engine.hpp"
-#include <Audio/Backend/WASAPI.hpp>
+﻿#include <Audio/Backend/WASAPI.hpp>
 #include <Audio/Engine.hpp>
+#include <Audio/Ports/PortManager.hpp>
 #include <Audio/Transport.hpp>
 #include <Graph/ExecutionGraph.hpp>
 
@@ -26,6 +26,7 @@ namespace quinte
         }
 
         Transport* pTransport = Interface<Transport>::Get();
+        PortManager* pPortManager = Interface<PortManager>::Get();
         pTransport->m_Playhead = pTransport->m_PlayheadRequest;
         pTransport->m_Recording = pTransport->m_RecordingRequested;
 
@@ -50,20 +51,22 @@ namespace quinte
                 pTransport->AddToPlayhead(frameCount);
         };
 
-        m_MonitorPorts.Left->GetBufferView()->Clear();
-        m_MonitorPorts.Right->GetBufferView()->Clear();
+        const StereoPorts& monitorPorts = pPortManager->GetMonitorPorts();
+        monitorPorts.Left->GetBufferView()->Clear();
+        monitorPorts.Right->GetBufferView()->Clear();
 
         const audio::EngineProcessInfo processInfo{ .StartTime = pTransport->m_Playhead, .LocalRange = { 0, frameCount } };
         m_Graph->Run(processInfo);
 
-        AudioBufferView* pHWL = m_HardwarePorts.Left->GetBufferView();
-        pHWL->Read(static_cast<float*>(pInputBuffer), 0, frameCount);
+        const std::span<const Rc<AudioPort>> hardwarePorts = pPortManager->GetHardwarePorts();
+        for (uint32_t channelIndex = 0; channelIndex < hardwarePorts.size(); ++channelIndex)
+        {
+            AudioBufferView* pHardwareInput = hardwarePorts[channelIndex]->GetBufferView();
+            pHardwareInput->Read(static_cast<const float*>(pInputBuffer) + frameCount * channelIndex, 0, frameCount);
+        }
 
-        AudioBufferView* pHWR = m_HardwarePorts.Right->GetBufferView();
-        pHWR->Read(static_cast<float*>(pInputBuffer) + frameCount, 0, frameCount);
-
-        AudioBufferView* pML = m_MonitorPorts.Left->GetBufferView();
-        AudioBufferView* pMR = m_MonitorPorts.Right->GetBufferView();
+        AudioBufferView* pML = monitorPorts.Left->GetBufferView();
+        AudioBufferView* pMR = monitorPorts.Right->GetBufferView();
 
         memory::Copy(static_cast<float*>(pOutputBuffer), pML->Data(), frameCount);
         memory::Copy(static_cast<float*>(pOutputBuffer) + frameCount, pMR->Data(), frameCount);
@@ -97,9 +100,11 @@ namespace quinte
         outputDesc.DeviceID = startInfo.OutputDevice;
         outputDesc.ChannelCount = 2;
 
+        const audio::DeviceDesc& inputDeviceDesc = m_Impl->GetDeviceDesc(startInfo.InputDevice);
+
         audio::StreamDesc inputDesc{};
         inputDesc.DeviceID = startInfo.InputDevice;
-        inputDesc.ChannelCount = 2;
+        inputDesc.ChannelCount = inputDeviceDesc.InputChannelCount;
 
         audio::StreamOpenInfo openInfo{};
         openInfo.pOutputDesc = &outputDesc;
@@ -119,16 +124,6 @@ namespace quinte
 
         EventBus<AudioEngineEvents>::SendEvent(&AudioEngineEvents::OnAudioStreamStarted);
 
-        const audio::PortDesc hwPortsDesc{ .Kind = audio::PortKind::Hardware, .Direction = audio::DataDirection::Output };
-        m_HardwarePorts = StereoPorts::Create(hwPortsDesc);
-        m_HardwarePorts.Left->AllocateBuffer();
-        m_HardwarePorts.Right->AllocateBuffer();
-
-        const audio::PortDesc monPortsDesc{ .Kind = audio::PortKind::Hardware, .Direction = audio::DataDirection::Input };
-        m_MonitorPorts = StereoPorts::Create(monPortsDesc);
-        m_MonitorPorts.Left->AllocateBuffer();
-        m_MonitorPorts.Right->AllocateBuffer();
-
         m_Graph = memory::make_unique<ExecutionGraph>();
         m_Graph->Build();
 
@@ -144,9 +139,8 @@ namespace quinte
             return;
 
         m_Running.store(false);
-        m_MonitorPorts = {};
-        m_HardwarePorts = {};
         m_Impl->CloseStream();
+        m_Graph.reset();
         EventBus<AudioEngineEvents>::SendEvent(&AudioEngineEvents::OnAudioStreamStopped);
     }
 } // namespace quinte
